@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Mirror.exe</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="crt-shell" aria-live="polite">
+    <div class="crt-overlay"></div>
+    <div class="screen-noise"></div>
+
+    <section id="game" class="game-window">
+      <header class="top-bar">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+        <span id="window-title">ANONYMOUS_MAIL_CLIENT</span>
+      </header>
+
+      <div id="scene" class="scene mail-scene">
+        <div id="avatar" class="avatar hidden" aria-hidden="true">
+          <div class="mirror-frame">
+            <div class="mirror-glass">
+              <div class="girl-face">
+                <span class="eye left"></span>
+                <span class="eye right"></span>
+                <span class="mouth"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-panel">
+          <p id="speaker" class="speaker">匿名邮件</p>
+          <div id="text" class="text-box"></div>
+          <div id="choices" class="choices"></div>
+        </div>
+      </div>
+
+      <footer class="status-bar">
+        <span id="status-left">STATUS: WAITING</span>
+        <span id="status-right">Mirror.exe</span>
+      </footer>
+    </section>
+  </main>
+
+  <div id="log-modal" class="log-modal hidden" role="dialog" aria-modal="true" aria-labelledby="log-title">
+    <div class="log-modal__backdrop" data-close-log></div>
+    <section class="log-modal__panel">
+      <header class="log-modal__header">
+        <h2 id="log-title">日志</h2>
+        <button id="log-x" class="icon-button" type="button" aria-label="退出日志" data-close-log>×</button>
+      </header>
+      <div id="log-body" class="log-modal__body"></div>
+      <div id="log-actions" class="log-modal__actions"></div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
