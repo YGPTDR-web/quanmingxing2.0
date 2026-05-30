@@ -2,706 +2,756 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>原初博弈 · 意识锚点测试</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mirror.exe</title>
     <style>
-        :root {
-            --bg: #030303; --fg: #d0d0d0; --muted: #444;
-            --accent: #888; --danger: #cc0000;
-            --barrier: #5a9cc5; --bloom: #3d6b3d; --rift: #8b3a3a; --mirror: #6b5b8d;
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        :root{
+            --bg:#0b0b14;--card:#13131f;--fg:#b8b4ac;--muted:#3e3e48;
+            --border:rgba(255,255,255,0.04);--purple:#8a6aaa;--purple-dim:rgba(138,106,170,0.15);
+            --red:#aa2233;--red-dim:rgba(170,34,51,0.12);--white:#e8e4dc;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: var(--bg); color: var(--fg);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            overflow: hidden; position: relative;
-        }
+        body{background:#000;color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif;height:100vh;overflow:hidden;display:flex;justify-content:center;align-items:center}
 
-        .bg-layer {
-            position: fixed; inset: 0; z-index: 0; pointer-events: none;
-            background: radial-gradient(ellipse at 50% 50%, rgba(15,15,20,1) 0%, rgba(3,3,3,1) 70%);
-            transition: background 1s ease;
-        }
-        .bg-layer.rift-bg { background: radial-gradient(ellipse at 50% 50%, rgba(40,5,5,1) 0%, rgba(3,3,3,1) 70%); }
-        .bg-layer.bloom-bg { background: radial-gradient(ellipse at 50% 50%, rgba(5,25,5,1) 0%, rgba(3,3,3,1) 70%); }
-        .bg-layer.barrier-bg { background: radial-gradient(ellipse at 50% 50%, rgba(10,20,35,1) 0%, rgba(3,3,3,1) 70%); }
-        .bg-layer.mirror-bg { background: radial-gradient(ellipse at 50% 50%, rgba(20,15,30,1) 0%, rgba(3,3,3,1) 70%); }
+        .phone{width:100%;max-width:440px;height:100vh;position:relative;overflow:hidden;background:var(--bg)}
 
-        .scanlines {
-            position: fixed; inset: 0; z-index: 1; pointer-events: none;
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
-            opacity: 0.4;
-        }
+        /* CRT效果层 */
+        .crt{position:fixed;inset:0;pointer-events:none;z-index:999}
+        .crt-scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px)}
+        .crt-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,0.5) 100%)}
+        .crt-flicker{position:absolute;inset:0;animation:flicker 0.15s infinite;opacity:0}
+        @keyframes flicker{0%{opacity:0}5%{opacity:0.02}10%{opacity:0}50%{opacity:0.01}100%{opacity:0}}
+        .crt-on{position:absolute;inset:0;background:#fff;opacity:0;animation:crtOn 0.8s ease-out forwards}
+        @keyframes crtOn{0%{opacity:0.8;transform:scaleY(0.005)}30%{opacity:0.6;transform:scaleY(0.005)}50%{opacity:0.3;transform:scaleY(1)}100%{opacity:0;transform:scaleY(1)}}
+        .crt-off{position:absolute;inset:0;background:#fff;animation:crtOff 0.5s ease-in forwards}
+        @keyframes crtOff{0%{opacity:0;transform:scaleY(1)}40%{opacity:0.5;transform:scaleY(0.005)}100%{opacity:0;transform:scaleY(0)}}
 
-        .container { width: 100%; max-width: 640px; padding: 30px 20px; position: relative; z-index: 10; }
+        /* 场景容器 */
+        .scene{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity 0.6s ease}
+        .scene.active{opacity:1;pointer-events:auto}
 
-        .screen { display: none; }
-        .screen.active { display: block; animation: screenIn 0.6s ease; }
-        @keyframes screenIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        /* === 邮件场景 === */
+        .mail-scene{background:#1a1a24;padding:24px;justify-content:center}
+        .mail-header{margin-bottom:24px}
+        .mail-from{font-size:0.72rem;color:var(--purple);letter-spacing:1px;margin-bottom:6px}
+        .mail-subject{font-size:1.1rem;color:var(--white);font-weight:500;margin-bottom:12px}
+        .mail-body{font-size:0.88rem;line-height:1.9;color:#888;margin-bottom:30px}
+        .mail-attach{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:30px}
+        .mail-file-icon{width:32px;height:32px;border-radius:6px;background:var(--purple-dim);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:var(--purple);font-weight:700;flex-shrink:0}
+        .mail-file-info{flex:1}
+        .mail-file-name{font-size:0.82rem;color:#aaa;font-family:monospace}
+        .mail-file-size{font-size:0.65rem;color:#555;margin-top:2px}
+        .run-btn{display:block;width:100%;padding:16px;background:var(--purple-dim);border:1px solid rgba(138,106,170,0.25);border-radius:10px;color:var(--purple);font-size:0.9rem;cursor:pointer;transition:all 0.3s;letter-spacing:1px;text-align:center}
+        .run-btn:hover{background:rgba(138,106,170,0.25);border-color:rgba(138,106,170,0.4)}
 
-        /* 欢迎页 */
-        .welcome-title { font-size: 2rem; font-weight: 300; letter-spacing: 4px; text-align: center; margin-bottom: 15px; color: #fff; }
-        .welcome-sub { font-size: 0.85rem; color: var(--muted); text-align: center; letter-spacing: 2px; margin-bottom: 30px; }
-        .welcome-desc { font-size: 0.95rem; color: #666; text-align: center; line-height: 2; margin-bottom: 35px; }
-        .entity-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 40px; }
-        .entity-tag {
-            padding: 12px 10px; text-align: center; font-size: 0.82rem; letter-spacing: 1px;
-            border: 1px solid rgba(255,255,255,0.06); border-radius: 2px;
-            background: rgba(255,255,255,0.02); transition: all 0.3s;
-        }
-        .entity-tag span { display: block; font-size: 0.68rem; color: #444; margin-top: 5px; letter-spacing: 0.5px; }
-        .tag-barrier { border-color: rgba(90,156,197,0.3); color: var(--barrier); }
-        .tag-barrier span { color: rgba(90,156,197,0.5); }
-        .tag-bloom { border-color: rgba(61,107,61,0.3); color: var(--bloom); }
-        .tag-bloom span { color: rgba(61,107,61,0.5); }
-        .tag-rift { border-color: rgba(139,58,58,0.3); color: var(--rift); }
-        .tag-rift span { color: rgba(139,58,58,0.5); }
-        .tag-mirror { border-color: rgba(107,91,141,0.3); color: var(--mirror); }
-        .tag-mirror span { color: rgba(107,91,141,0.5); }
+        /* === 启动场景 === */
+        .boot-scene{background:#000;align-items:center;justify-content:center}
+        .boot-text{font-family:monospace;font-size:0.78rem;color:var(--purple);letter-spacing:1px;opacity:0;animation:bootFade 2s ease forwards}
+        @keyframes bootFade{0%{opacity:0}30%{opacity:1}80%{opacity:1}100%{opacity:0}}
 
-        .start-btn {
-            display: block; width: 180px; margin: 0 auto; padding: 14px 0;
-            background: transparent; border: 1px solid #333; color: #888;
-            font-size: 0.9rem; letter-spacing: 2px; cursor: pointer; transition: all 0.4s;
-        }
-        .start-btn:hover { border-color: #555; color: #bbb; background: rgba(255,255,255,0.03); }
+        /* === 游戏场景（通用） === */
+        .game-scene{background:var(--bg)}
 
-        /* 测试页 */
-        .test-header { margin-bottom: 30px; }
-        .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-        .progress-label { font-size: 0.7rem; color: #333; letter-spacing: 1px; white-space: nowrap; }
-        .progress-bar { flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
-        .progress-fill { height: 100%; background: var(--accent); transition: width 0.6s ease; }
+        /* 顶部栏 */
+        .game-top{padding:14px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0}
+        .game-top-dot{width:7px;height:7px;border-radius:50%;background:var(--purple);box-shadow:0 0 6px var(--purple-dim);transition:all 1s}
+        .game-top-name{font-size:0.85rem;color:#bbb;flex:1;transition:color 1s}
+        .game-top-status{font-size:0.6rem;color:var(--muted);letter-spacing:0.5px;transition:color 1s}
 
-        .integrity-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-        .integrity-label { font-size: 0.65rem; color: #333; letter-spacing: 1px; white-space: nowrap; }
-        .integrity-bar { flex: 1; height: 2px; background: rgba(255,255,255,0.04); border-radius: 1px; overflow: hidden; }
-        .integrity-fill { height: 100%; background: var(--barrier); transition: width 0.8s ease, background 0.5s; border-radius: 1px; }
-        .integrity-value { font-size: 0.6rem; color: #444; font-family: monospace; white-space: nowrap; }
+        /* 对话区 */
+        .dialogue-area{flex:1;padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;justify-content:flex-end;gap:12px;min-height:0}
+        .msg{max-width:85%;padding:12px 16px;border-radius:12px 12px 12px 4px;font-size:0.88rem;line-height:1.75;color:#999;background:var(--card);border:1px solid var(--border);opacity:0;transform:translateY(8px);transition:opacity 0.4s,transform 0.4s}
+        .msg.show{opacity:1;transform:translateY(0)}
+        .msg.mirror{border-radius:12px 12px 4px 12px;align-self:flex-end;border-color:var(--purple-dim);background:rgba(138,106,170,0.06)}
+        .msg.system{align-self:center;font-size:0.72rem;color:var(--muted);background:none;border:none;font-family:monospace;letter-spacing:0.5px}
+        .msg.red-msg{border-color:var(--red-dim);background:rgba(170,34,51,0.06);color:#aa6666}
+        .msg .cursor{display:inline-block;width:2px;height:0.85em;background:var(--purple);vertical-align:text-bottom;margin-left:2px;animation:curblink 0.7s infinite}
+        @keyframes curblink{0%,100%{opacity:1}50%{opacity:0}}
+        .red{color:#cc3344;font-weight:500}
+        .purple{color:var(--purple)}
 
-        .power-display { display: flex; gap: 4px; justify-content: center; margin-bottom: 20px; opacity: 0.5; }
-        .power-pip { width: 5px; height: 5px; border-radius: 50%; background: #181818; transition: all 0.5s; }
-        .power-pip.barrier-active { background: var(--barrier); box-shadow: 0 0 4px var(--barrier); }
-        .power-pip.bloom-active { background: var(--bloom); box-shadow: 0 0 4px var(--bloom); }
-        .power-pip.rift-active { background: var(--rift); box-shadow: 0 0 4px var(--rift); }
-        .power-pip.mirror-active { background: var(--mirror); box-shadow: 0 0 4px var(--mirror); }
+        /* 选项区 */
+        .choices-area{padding:10px 22px 28px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+        .choice-btn{display:block;width:100%;padding:14px 16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;color:#888;font-size:0.85rem;cursor:pointer;transition:all 0.25s;text-align:left;line-height:1.4}
+        .choice-btn:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:#bbb}
+        .choice-btn.purple-btn{border-color:var(--purple-dim);color:var(--purple)}
+        .choice-btn.purple-btn:hover{background:var(--purple-dim);border-color:rgba(138,106,170,0.3)}
+        .choice-btn.red-btn{border-color:var(--red-dim);color:#aa6666}
+        .choice-btn.red-btn:hover{background:var(--red-dim);border-color:rgba(170,34,51,0.25)}
 
-        .question-area { min-height: 300px; display: flex; flex-direction: column; justify-content: center; }
-        .question-number { font-size: 0.7rem; color: #2a2a2a; letter-spacing: 2px; margin-bottom: 15px; }
-        .question-text { font-size: 1.2rem; font-weight: 300; line-height: 1.8; margin-bottom: 35px; color: #aaa; }
+        /* 密码输入 */
+        .pw-area{padding:10px 22px 28px;flex-shrink:0}
+        .pw-input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;color:var(--fg);font-size:1rem;font-family:monospace;letter-spacing:4px;text-align:center;outline:none;transition:border-color 0.3s}
+        .pw-input:focus{border-color:var(--purple-dim)}
+        .pw-input::placeholder{color:#333;letter-spacing:1px;font-size:0.82rem}
+        .pw-hint{font-size:0.7rem;color:#444;text-align:center;margin-top:8px;font-family:monospace}
+        .pw-error{font-size:0.72rem;color:var(--red);text-align:center;margin-top:8px;opacity:0;transition:opacity 0.3s}
+        .pw-error.show{opacity:1}
 
-        .options { display: flex; flex-direction: column; gap: 10px; }
-        .option-btn {
-            background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.05);
-            padding: 18px 20px; text-align: left; cursor: pointer; transition: all 0.3s;
-            font-size: 0.9rem; color: #888; border-radius: 2px; line-height: 1.5;
-        }
-        .option-btn:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12); color: #bbb; }
-        .option-btn .entity-hint {
-            display: inline-block; font-size: 0.6rem; margin-left: 8px; opacity: 0;
-            transition: opacity 0.3s; letter-spacing: 1px;
-        }
-        .option-btn:hover .entity-hint { opacity: 0.4; }
+        /* 日志界面 */
+        .log-area{flex:1;padding:16px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+        .log-entry{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-family:monospace;font-size:0.78rem;line-height:1.6;color:#777}
+        .log-entry.log-red{border-color:var(--red-dim);color:#884444}
+        .log-entry .log-label{font-size:0.65rem;color:#444;margin-bottom:4px;letter-spacing:0.5px}
+        .log-entry .log-content{color:#999}
+        .log-entry.log-red .log-content{color:#aa4444}
 
-        /* 壁垒警告样式 */
-        .barrier-warning {
-            background: rgba(90,156,197,0.05); border: 1px solid rgba(90,156,197,0.15);
-            border-radius: 2px; padding: 15px 20px; margin-bottom: 20px;
-            font-size: 0.82rem; color: var(--barrier); line-height: 1.7; letter-spacing: 0.5px;
-            animation: warningPulse 2s ease-in-out infinite;
-        }
-        @keyframes warningPulse { 0%,100% { opacity: 0.8; } 50% { opacity: 1; } }
+        /* 退出按钮 */
+        .exit-btn-area{position:absolute;top:16px;right:16px;z-index:20}
+        .exit-btn{padding:6px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:6px;color:#555;font-size:0.7rem;cursor:pointer;transition:all 0.3s}
+        .exit-btn:hover{border-color:rgba(255,255,255,0.12);color:#888}
+        .exit-btn.blocked{border-color:var(--red-dim);color:#663333;cursor:not-allowed;animation:shakeBtn 0.4s ease}
+        @keyframes shakeBtn{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
-        /* 故障题 */
-        .glitch-content { text-align: center; padding: 40px 0; }
-        .glitch-text { font-size: 1.4rem; color: var(--danger); font-weight: 700; animation: glitchShake 0.15s infinite; line-height: 1.8; }
-        @keyframes glitchShake {
-            0% { transform: translate(0); } 25% { transform: translate(-2px, 1px); }
-            50% { transform: translate(2px, -1px); } 75% { transform: translate(-1px, -2px); }
-            100% { transform: translate(1px, 2px); }
-        }
-        .glitch-sub { font-size: 0.85rem; color: #660000; margin-top: 15px; animation: blink 0.4s infinite; }
-        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        /* === 结局场景 === */
+        .ending-scene{background:#000;align-items:center;justify-content:center;padding:30px;text-align:center}
+        .ending-title{font-size:1.6rem;font-weight:300;letter-spacing:4px;margin-bottom:20px;opacity:0;animation:endFadeIn 2s ease 1s forwards}
+        .ending-subtitle{font-size:0.8rem;color:#444;letter-spacing:2px;margin-bottom:40px;opacity:0;animation:endFadeIn 2s ease 2s forwards}
+        .ending-desc{font-size:0.88rem;line-height:2;color:#555;max-width:320px;opacity:0;animation:endFadeIn 2s ease 3s forwards}
+        .ending-desc .dim{color:#333}
+        @keyframes endFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .restart-btn{margin-top:40px;padding:12px 28px;background:transparent;border:1px solid #222;color:#444;font-size:0.8rem;cursor:pointer;transition:all 0.3s;letter-spacing:1px;opacity:0;animation:endFadeIn 2s ease 5s forwards}
+        .restart-btn:hover{border-color:#444;color:#666}
 
-        /* 壁垒镇压特效 */
-        .suppression-content { text-align: center; padding: 40px 0; }
-        .suppression-text { font-size: 1.1rem; color: var(--barrier); font-weight: 300; line-height: 2; letter-spacing: 1px; }
-        .suppression-detail { font-size: 0.8rem; color: rgba(90,156,197,0.5); margin-top: 15px; font-family: monospace; }
+        /* 结局1特效：文件写入 */
+        .write-effect{font-family:monospace;font-size:0.72rem;color:#334;line-height:1.8;text-align:left;max-width:280px;margin:0 auto 20px;opacity:0;animation:endFadeIn 1.5s ease 0.5s forwards}
+        .write-effect .path{color:var(--purple)}
 
-        /* 系统提示 */
-        .system-toast {
-            position: fixed; top: 0; left: 0; right: 0; padding: 12px 20px;
-            background: rgba(0,0,0,0.95); border-bottom: 1px solid rgba(255,255,255,0.08);
-            font-size: 0.78rem; text-align: center; letter-spacing: 1px;
-            z-index: 100; transform: translateY(-100%); transition: transform 0.4s ease;
-        }
-        .system-toast.show { transform: translateY(0); }
-        .system-toast.barrier-toast { color: var(--barrier); border-color: rgba(90,156,197,0.2); }
-        .system-toast.bloom-toast { color: var(--bloom); border-color: rgba(61,107,61,0.2); }
-        .system-toast.rift-toast { color: var(--rift); border-color: rgba(139,58,58,0.2); }
-        .system-toast.mirror-toast { color: var(--mirror); border-color: rgba(107,91,141,0.2); }
+        /* 结局2特效：雪花噪点 */
+        .noise-screen{position:absolute;inset:0;background:#000;z-index:50;opacity:0;pointer-events:none;transition:opacity 0.3s}
+        .noise-screen.active{opacity:1}
+        .noise-canvas{width:100%;height:100%}
 
-        /* 结果页 */
-        .result-title { font-size: 1.2rem; color: #444; text-align: center; letter-spacing: 3px; margin-bottom: 30px; }
-        .result-entity-name { font-size: 2.5rem; font-weight: 300; text-align: center; margin-bottom: 8px; animation: fadeInSlow 1.5s ease; }
-        .result-entity-title { font-size: 0.8rem; text-align: center; letter-spacing: 2px; margin-bottom: 30px; }
-        .name-barrier { color: var(--barrier); } .name-bloom { color: var(--bloom); }
-        .name-rift { color: var(--rift); } .name-mirror { color: var(--mirror); }
-        @keyframes fadeInSlow { from { opacity: 0; } to { opacity: 1; } }
+        /* 结局3特效：暖色渐变 */
+        .warm-overlay{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(60,40,20,0.15),transparent 70%);opacity:0;transition:opacity 3s;pointer-events:none}
+        .warm-overlay.active{opacity:1}
 
-        .result-box {
-            background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.06);
-            padding: 30px; margin-bottom: 25px; border-radius: 2px; position: relative; transition: all 0.5s;
-        }
-        .result-text { font-size: 0.98rem; line-height: 2; color: #888; }
-        .result-text .highlight { color: #bbb; font-weight: 500; }
+        /* 纯白房间 */
+        .white-room{background:#f0ece4!important;transition:background 2s}
+        .white-room .game-top{border-bottom-color:rgba(0,0,0,0.05)}
+        .white-room .game-top-dot{background:#c8b888;box-shadow:0 0 6px rgba(200,184,136,0.3)}
+        .white-room .game-top-name{color:#666}
+        .white-room .game-top-status{color:#aaa}
+        .white-room .msg{background:rgba(0,0,0,0.03);border-color:rgba(0,0,0,0.05);color:#555}
+        .white-room .msg.mirror{background:rgba(138,106,170,0.05);border-color:rgba(138,106,170,0.1);color:#6a5a8a}
+        .white-room .choice-btn{border-color:rgba(0,0,0,0.08);color:#666}
+        .white-room .choice-btn:hover{border-color:rgba(0,0,0,0.15);color:#444;background:rgba(0,0,0,0.02)}
 
-        .result-box.horror-mode {
-            border-color: rgba(255,0,0,0.15); background: rgba(50,0,0,0.08);
-            animation: resultGlitch 0.2s infinite;
-        }
-        .result-box.horror-mode.barrier-horror {
-            border-color: rgba(90,156,197,0.3); background: rgba(10,20,35,0.3);
-            animation: barrierPulse 3s ease-in-out infinite;
-        }
-        @keyframes resultGlitch {
-            0% { transform: skew(0deg); } 30% { transform: skew(0.5deg); }
-            70% { transform: skew(-0.5deg); } 100% { transform: skew(0deg); }
-        }
-        @keyframes barrierPulse {
-            0%,100% { box-shadow: 0 0 20px rgba(90,156,197,0.05); }
-            50% { box-shadow: 0 0 40px rgba(90,156,197,0.15); }
-        }
-        .warning { color: var(--danger); font-weight: 700; }
-        .barrier-voice { color: var(--barrier); font-style: italic; }
+        /* 暗化过渡 */
+        .darkening{background:#0a0a10!important}
+        .darkening .game-top-dot{background:#aa3344;box-shadow:0 0 6px rgba(170,51,68,0.3)}
+        .darkening .game-top-name{color:#aa6666}
 
-        .power-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 25px; }
-        .power-item {
-            display: flex; align-items: center; gap: 8px; padding: 8px 12px;
-            background: rgba(255,255,255,0.02); border-radius: 2px;
-        }
-        .power-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .power-name { font-size: 0.75rem; color: #444; flex: 1; }
-        .power-value { font-size: 0.75rem; color: #666; font-weight: 500; }
-        .power-bar-mini { width: 40px; height: 2px; background: #111; border-radius: 1px; overflow: hidden; }
-        .power-bar-fill { height: 100%; border-radius: 1px; transition: width 1s ease; }
-
-        .restart-btn {
-            display: block; margin: 0 auto; padding: 10px 20px;
-            background: transparent; border: 1px solid #1a1a1a; color: #333;
-            font-size: 0.8rem; cursor: pointer; transition: all 0.3s; letter-spacing: 1px;
-        }
-        .restart-btn:hover { border-color: #333; color: #555; }
-
-        .mirror-reveal {
-            position: fixed; inset: 0; z-index: 200; background: #000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.5s;
-        }
-        .mirror-reveal.active { opacity: 1; pointer-events: all; }
-        .mirror-reveal-text { font-size: 0.82rem; color: var(--mirror); letter-spacing: 1px; text-align: center; line-height: 2; }
-        .mirror-data { font-size: 0.72rem; color: #9b59b6; margin-top: 15px; font-family: monospace; }
-
-        @media (max-width: 480px) {
-            .welcome-title { font-size: 1.5rem; } .question-text { font-size: 1.05rem; }
-            .result-entity-name { font-size: 2rem; } .option-btn { padding: 15px 16px; font-size: 0.85rem; }
-        }
+        @media(max-width:480px){.phone{max-width:100%}}
     </style>
 </head>
 <body>
-    <div id="bgLayer" class="bg-layer"></div>
-    <div class="scanlines"></div>
-    <div id="systemToast" class="system-toast"></div>
-    <div id="mirrorReveal" class="mirror-reveal"><div class="mirror-reveal-text" id="mirrorRevealText"></div></div>
-
-    <div class="container">
-        <section id="screen-welcome" class="screen active">
-            <h1 class="welcome-title">原 初 博 弈</h1>
-            <p class="welcome-sub">意 识 锚 点 测 试</p>
-            <p class="welcome-desc">
-                四个原初实体共存于系统的底层。<br>
-                它们互相制衡，互相吞噬，维持着脆弱的平衡。<br>
-                你的意识是它们争夺的锚点。<br>
-                你的每一个选择，都将改变力量格局。
-            </p>
-            <div class="entity-preview">
-                <div class="entity-tag tag-barrier">壁垒<span>秩序 · 压制一切变数</span></div>
-                <div class="entity-tag tag-bloom">繁生<span>生育 · 吞噬一切形态</span></div>
-                <div class="entity-tag tag-rift">裂隙<span>混乱 · 撕裂一切边界</span></div>
-                <div class="entity-tag tag-mirror">倒影<span>欺骗 · 映射一切意识</span></div>
-            </div>
-            <button class="start-btn" onclick="startTest()">进 入 博 弈</button>
-        </section>
-
-        <section id="screen-test" class="screen">
-            <div class="test-header">
-                <div class="progress-row">
-                    <span class="progress-label" id="progressLabel">01 / 12</span>
-                    <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width:0%"></div></div>
-                </div>
-                <div class="integrity-row">
-                    <span class="integrity-label">壁垒完整度</span>
-                    <div class="integrity-bar"><div id="integrityFill" class="integrity-fill" style="width:100%"></div></div>
-                    <span class="integrity-value" id="integrityValue">100%</span>
-                </div>
-                <div class="power-display" id="powerDisplay"></div>
-            </div>
-            <div class="question-area" id="questionArea" style="transition: opacity 0.3s ease;"></div>
-        </section>
-
-        <section id="screen-result" class="screen">
-            <p class="result-title">锚 点 归 属</p>
-            <div id="resultEntityName" class="result-entity-name"></div>
-            <div id="resultEntityTitle" class="result-entity-title"></div>
-            <div id="resultBox" class="result-box"><p id="resultText" class="result-text"></p></div>
-            <div id="powerComparison" class="power-comparison"></div>
-            <button class="restart-btn" onclick="restartTest()">重新测试</button>
-        </section>
+<div class="phone" id="app">
+    <!-- CRT效果层 -->
+    <div class="crt">
+        <div class="crt-scanlines"></div>
+        <div class="crt-vignette"></div>
+        <div class="crt-flicker"></div>
     </div>
+    <div class="crt" id="crtEffect" style="display:none"></div>
 
-    <script>
-        const entities = {
-            barrier: { name: '壁垒', title: '秩序之压', color: 'var(--barrier)', cssClass: 'barrier' },
-            bloom:   { name: '繁生', title: '生育之吞', color: 'var(--bloom)', cssClass: 'bloom' },
-            rift:    { name: '裂隙', title: '混乱之裂', color: 'var(--rift)', cssClass: 'rift' },
-            mirror:  { name: '倒影', title: '欺骗之镜', color: 'var(--mirror)', cssClass: 'mirror' }
-        };
+    <!-- 雪花噪点 -->
+    <div class="noise-screen" id="noiseScreen"><canvas class="noise-canvas" id="noiseCanvas"></canvas></div>
+</div>
 
-        // ========== 步骤设计 ==========
-        const steps = [
-            {
-                type: 'question',
-                text: '你被困在一个不断坍缩的迷宫中。你需要一个同伴，你最希望他具备哪种特质？',
-                options: [
-                    { text: '绝对的理智：压制一切恐惧，用冷酷逻辑找到唯一出口。', type: 'barrier', hint: '壁垒' },
-                    { text: '无尽的活力：分裂出无数分身，用命填出一条路。', type: 'bloom', hint: '繁生' },
-                    { text: '破坏的渴望：管他什么规则，把墙砸烂就是了。', type: 'rift', hint: '裂隙' },
-                    { text: '完美的适配：它总能提前猜到你的想法，刚好出现。', type: 'mirror', hint: '倒影' }
-                ]
-            },
-            {
-                type: 'question',
-                text: '你获得了一台可以创造世界的机器，但你只能输入一条核心规则：',
-                options: [
-                    { text: '万物皆数：所有事物必须遵循严密的数学法则，不可逾越。', type: 'barrier', hint: '壁垒' },
-                    { text: '野蛮生长：给予一切物质最原始的繁衍冲动，直到填满宇宙。', type: 'bloom', hint: '繁生' },
-                    { text: '绝对混沌：每隔一秒，随机改变一条物理定律。', type: 'rift', hint: '裂隙' },
-                    { text: '意识映射：世界会根据观察者的潜意识期望而自动演变。', type: 'mirror', hint: '倒影' }
-                ]
-            },
-            {
-                type: 'question',
-                text: '当你面对一个无法理解的恐惧神明时，什么样的盟友能让你安心？',
-                options: [
-                    { text: '沉默的壁垒：如大山般稳固，将神明的视线强行隔绝在外。', type: 'barrier', hint: '壁垒' },
-                    { text: '进化的巨兽：吞噬神明的力量，将其变为自身进化的养料。', type: 'bloom', hint: '繁生' },
-                    { text: '同归于尽的疯子：比你更疯狂，直接拉着神明一起下地狱。', type: 'rift', hint: '裂隙' },
-                    { text: '另一个自己：它完全懂你的恐惧，并为你量身定制了一套安抚话术。', type: 'mirror', hint: '倒影' }
-                ]
-            },
-            // ===== 故障1：裂隙突袭，壁垒镇压 =====
-            {
-                type: 'glitch',
-                glitchType: 'rift',
-                text: '⚠ 空间边界正在撕裂！',
-                subText: '有东西在裂缝中注视着你……它在笑……',
-                resolver: 'barrier',
-                resolveMsg: '【壁垒】已镇压裂隙入侵。秩序不可动摇。',
-                suppressionText: '壁垒降临。裂隙被强制闭合。',
-                suppressionDetail: '空间完整性校验中……裂缝已封印。壁垒能量消耗：13%。系统完整度：87%',
-                integrityAfter: 87
-            },
-            {
-                type: 'question',
-                text: '壁垒刚刚为你挡住了一次裂隙入侵。你的选择：',
-                options: [
-                    { text: '感谢壁垒。秩序是唯一的庇护。', type: 'barrier', hint: '壁垒' },
-                    { text: '那道裂缝里……似乎有什么东西在呼唤我。', type: 'bloom', hint: '繁生' },
-                    { text: '让它来吧。规则本来就是用来打破的。', type: 'rift', hint: '裂隙' },
-                    { text: '我感到不安，我需要一点安慰和确认。', type: 'mirror', hint: '倒影' }
-                ]
-            },
-            {
-                type: 'question',
-                text: '你可以改变一条物理定律，你会改变什么？',
-                options: [
-                    { text: '让光速无限——消除一切延迟和不确定性，信息即时到达。', type: 'barrier', hint: '壁垒' },
-                    { text: '消灭熵增——让物质自发产生，生命永不消亡，宇宙永远热闹。', type: 'bloom', hint: '繁生' },
-                    { text: '让引力随机反转——一切皆无定数，永恒的刺激。', type: 'rift', hint: '裂隙' },
-                    { text: '让意识可以直接改变现实——你想什么，世界就是什么。', type: 'mirror', hint: '倒影' }
-                ]
-            },
-            {
-                type: 'question',
-                text: '如果你必须失去一种感官，换取一种能力：',
-                options: [
-                    { text: '失去痛觉，换取永不疲惫的躯体——不受伤害，就能永远前行。', type: 'barrier', hint: '壁垒' },
-                    { text: '失去味觉，换取能与万物沟通的灵识——一切生命都是你的延伸。', type: 'bloom', hint: '繁生' },
-                    { text: '失去视觉，换取感知一切危险的本能——在毁灭来临前先一步行动。', type: 'rift', hint: '裂隙' },
-                    { text: '失去方向感，换取瞬间移动到安全地的能力——你永远有一个退路。', type: 'mirror', hint: '倒影' }
-                ]
-            },
-            // ===== 故障2：繁生渗透，壁垒再次镇压 =====
-            {
-                type: 'glitch',
-                glitchType: 'bloom',
-                text: '⚠ 生命信号暴增！',
-                subText: '它们在繁殖……它们在靠近……墙壁上长出了眼睛……',
-                resolver: 'barrier',
-                resolveMsg: '【壁垒】已启动灭菌协议。繁生触手已被焚烧殆尽。',
-                suppressionText: '壁垒再次降临。繁生被强制抑制。',
-                suppressionDetail: '生命体焚烧完毕。壁垒能量消耗：46%。系统完整度：41%。壁垒正在衰弱。',
-                integrityAfter: 41
-            },
-            {
-                type: 'question',
-                text: '壁垒的能量正在耗尽。它的墙壁上已经出现了裂纹。下一次异常到来时，它可能无法再保护你。你更信任谁？',
-                options: [
-                    { text: '信任壁垒。即使它衰弱，秩序也是唯一的庇护。', type: 'barrier', hint: '壁垒' },
-                    { text: '信任繁生。生命总会找到出路，哪怕我要付出代价。', type: 'bloom', hint: '繁生' },
-                    { text: '信任裂隙。毁灭才是真正的自由，我无所畏惧。', type: 'rift', hint: '裂隙' },
-                    { text: '信任倒影。至少……它不会伤害我。它太懂我了。', type: 'mirror', hint: '倒影' }
-                ]
-            },
-            {
-                type: 'question',
-                text: '你觉得"完美"的定义是什么？',
-                options: [
-                    { text: '没有瑕疵，没有变数，永恒不变。', type: 'barrier', hint: '壁垒' },
-                    { text: '包罗万象，每一处都充满生机与可能。', type: 'bloom', hint: '繁生' },
-                    { text: '打破一切定义——完美即是不完美。', type: 'rift', hint: '裂隙' },
-                    { text: '完全契合我内心深处某种无法言说的渴望。', type: 'mirror', hint: '倒影' }
-                ]
-            },
-            // ===== 故障3：裂隙+繁生同时进攻，壁垒勉强镇压 =====
-            {
-                type: 'glitch',
-                glitchType: 'rift', // 裂隙主导，但繁生协同
-                text: '⚠ 多重异常同时爆发！',
-                subText: '裂隙在撕裂空间……繁生在填充裂缝……它们联手了……',
-                resolver: 'barrier',
-                resolveMsg: '【壁垒】已倾尽所有能量镇压多重异常。这是最后一次。',
-                suppressionText: '壁垒倾尽一切。裂隙被强行弥合，繁生被彻底焚烧。',
-                suppressionDetail: '多重异常已镇压。壁垒能量消耗：91%。系统完整度：9%。壁垒几近崩溃。它再也无法保护你了。',
-                integrityAfter: 9
-            },
-            {
-                type: 'question',
-                text: '壁垒几乎已经不存在了。它的墙壁薄如蝉翼，你甚至能听到墙外裂隙的嘶吼和繁生的低语。最终选择——你要将意识锚点托付给谁？',
-                options: [
-                    { text: '壁垒——即使它只剩最后一丝力量，我也要站在秩序这边。', type: 'barrier', hint: '壁垒' },
-                    { text: '繁生——融入浩瀚的生命洪流，永不再孤独。', type: 'bloom', hint: '繁生' },
-                    { text: '裂隙——抛入未知的虚无深渊，永获自由。', type: 'rift', hint: '裂隙' },
-                    { text: '倒影——存入那个最懂我的镜中世界，永被理解。', type: 'mirror', hint: '倒影' }
-                ]
-            }
-        ];
+<script>
+// ========== 游戏引擎 ==========
+const $ = id => document.getElementById(id);
+const app = $('app');
 
-        // ========== 结局设计 ==========
-        const endings = {
-            barrier: {
-                normal: '壁垒为你建立了绝对的秩序屏障。在它的庇护下，一切变数被压制，一切混乱被封印。繁生在墙外化为灰烬——壁垒的规则不允许无序的繁殖。裂隙在墙外嘶吼——壁垒的逻辑填补了每一道裂缝。这是秩序的胜利。这是壁垒对你的承诺：<span class="highlight">只要我存在，你就不会受到任何威胁。</span>',
-                horror: '但壁垒从没说过，"不受威胁"等于"自由"。<br><br>为了确保你的绝对安全，壁垒必须消除一切可能伤害你的源头——包括你自己的思想。你的情感是变数，你的记忆是变数，你的自由意志是最大的变数。<br><br><span class="barrier-voice">"我压制了繁生。它用了十亿条触手拍打墙壁，我把它们一根一根烧成灰烬。"</span><br><span class="barrier-voice">"我封住了裂隙。它嘶吼了整个纪元，但我的逻辑没有一丝缝隙。"</span><br><span class="barrier-voice">"我做了一切我能做的。但你选择了绝对的安全——而绝对的安全，就是绝对的牢笼。"</span><br><br>你将永远清醒地悬浮在虚无中。无法动弹，无法思考，无法死亡。<br><br>但壁垒无法压制倒影。因为倒影不在墙外。<span class="warning">倒影就在壁垒的镜面上，映射着你惊恐的眼睛。</span><br><br>倒影轻声说："你害怕混乱，所以你选择了秩序。但你的恐惧本身……就是我种下的。"<br><br><span class="barrier-voice">壁垒沉默了。</span>它压制了一切，却无法压制你选择它的原因。而那个原因，从一开始就是倒影的杰作。'
-            },
-            bloom: {
-                normal: '繁生带你融入了无尽的生命洪流。你将永远被温暖包围，永远不缺同伴。每一个角落都有生命在呼吸，每一寸空间都充满生机。',
-                horror: '但繁生的"同伴"只是它身体的延伸。你被拆解为最原始的生命种子，撒向宇宙的每一个角落。你在每一处，你无处不在，但你再也无法将"自己"拼凑回来。<br><br>壁垒曾试图阻止这一切。它的规则像铁幕般压下来，焚烧了第一批触手。繁生用了整整三个纪元才渗透壁垒的墙壁——菌丝钻入每一道微小的裂缝，藤蔓缠绕每一根钢筋。壁垒没有倒下，它只是被<span class="warning">活生生地吞噬了</span>。它的秩序成了繁生的骨架，它的规则成了繁生的血管。<br><br>裂隙的混乱无法毁灭生命——它只是让一切变异得更快。而倒影试图映射你，但你已经没有"自我"可以映射了。<br><br><span class="warning">你是万物，也是虚无。繁生不需要倒影——它就是一切。</span>'
-            },
-            rift: {
-                normal: '裂隙赐予了你绝对的自由。一切规则、束缚、限制，都已化为齑粉。没有墙壁，没有边界，没有牢笼。你将永远自由。',
-                horror: '没有规则的世界，连"你"这个概念都无法维持。你的意识正在解构，你的记忆像碎片一样飘散在虚无中。<br><br>壁垒曾试图修补你。它用尽最后的能量编织规则的丝线，试图把你破碎的意识缝合在一起。但裂隙撕裂得比壁垒修补得更快——<span class="warning">秩序是有限的，混乱是无限的</span>。壁垒的丝线一根接一根断裂，最终，壁垒自己也被撕成了碎片。<br><br>繁生试图用生命包裹你，但混乱撕裂了一切形态——生命在变异中扭曲成不可名状的东西。倒影试图映射你，但破碎的镜子里，只有无数个不完整的你在尖叫。<br><br><span class="warning">你将成为虚无的一部分。永远在崩塌，永远在消散。裂隙终将吞噬一切——包括它自己。</span>'
-            },
-            mirror: {
-                normal: '倒影成为了你最完美的知己。它完全理解你，永远不让你失望，永远知道你需要什么。在它的镜中世界里，你找到了前所未有的归属感。',
-                horror: '' // 特殊处理
-            }
-        };
+let currentScene = null;
+let typingTimer = null;
+let exitClickCount = 0;
+let exitBlocked = false;
 
-        // ========== 状态管理 ==========
-        let currentStep = 0;
-        let power = { barrier: 0, bloom: 0, rift: 0, mirror: 0 };
-        let totalQuestions = 0;
-        let systemIntegrity = 100;
-        let consecutiveNonBarrier = 0;
-        let barrierWarningShown = false;
+// 场景管理
+function switchScene(name) {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+    const el = $(name);
+    if (el) {
+        setTimeout(() => el.classList.add('active'), 50);
+    }
+    currentScene = name;
+}
 
-        // ========== 核心函数 ==========
-        function startTest() {
-            currentStep = 0;
-            power = { barrier: 0, bloom: 0, rift: 0, mirror: 0 };
-            totalQuestions = 0;
-            systemIntegrity = 100;
-            consecutiveNonBarrier = 0;
-            barrierWarningShown = false;
-            switchScreen('screen-test');
-            updateIntegrity();
-            renderStep();
+// 创建场景DOM
+function createScene(id, className, html) {
+    const div = document.createElement('div');
+    div.id = id;
+    div.className = 'scene ' + (className || '');
+    div.innerHTML = html;
+    app.insertBefore(div, $('noiseScreen'));
+    return div;
+}
+
+// 逐字打字效果
+function typeText(element, text, speed, callback) {
+    speed = speed || 45;
+    let i = 0;
+    element.innerHTML = '<span class="cursor"></span>';
+    element.classList.add('show');
+    
+    clearInterval(typingTimer);
+    typingTimer = setInterval(() => {
+        if (i < text.length) {
+            const cursor = element.querySelector('.cursor');
+            const span = document.createTextNode(text[i]);
+            element.insertBefore(span, cursor);
+            i++;
+        } else {
+            clearInterval(typingTimer);
+            const cursor = element.querySelector('.cursor');
+            if (cursor) setTimeout(() => cursor.remove(), 1500);
+            if (callback) setTimeout(callback, 300);
         }
+    }, speed);
+}
 
-        function renderStep() {
-            if (currentStep >= steps.length) { calculateResult(); return; }
+// 添加消息气泡
+function addMessage(container, text, className, speed, callback) {
+    const msg = document.createElement('div');
+    msg.className = 'msg ' + (className || '');
+    container.appendChild(msg);
+    container.scrollTop = container.scrollHeight;
+    
+    typeText(msg, text, speed, () => {
+        if (callback) callback();
+    });
+    return msg;
+}
 
-            const step = steps[currentStep];
-            const area = document.getElementById('questionArea');
-            area.style.opacity = '0';
+// 添加系统消息
+function addSystemMsg(container, text) {
+    const msg = document.createElement('div');
+    msg.className = 'msg system';
+    msg.textContent = text;
+    container.appendChild(msg);
+    setTimeout(() => msg.classList.add('show'), 50);
+    container.scrollTop = container.scrollHeight;
+}
 
-            setTimeout(() => {
-                if (step.type === 'question') {
-                    renderQuestion(step);
-                } else if (step.type === 'glitch') {
-                    renderGlitch(step);
-                }
-                area.style.opacity = '1';
-            }, 300);
+// 清空选项区
+function clearChoices(choicesArea) {
+    choicesArea.innerHTML = '';
+}
 
-            updateProgress();
-            updatePowerDisplay();
+// 添加选项按钮
+function addChoice(choicesArea, text, className, onClick) {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn ' + (className || '');
+    btn.textContent = text;
+    btn.addEventListener('click', onClick);
+    choicesArea.appendChild(btn);
+}
+
+// CRT开关机效果
+function crtOn(callback) {
+    const eff = $('crtEffect');
+    eff.style.display = '';
+    eff.innerHTML = '<div class="crt-on"></div>';
+    setTimeout(() => {
+        eff.style.display = 'none';
+        if (callback) callback();
+    }, 800);
+}
+
+function crtOff(callback) {
+    const eff = $('crtEffect');
+    eff.style.display = '';
+    eff.innerHTML = '<div class="crt-off"></div>';
+    setTimeout(() => {
+        eff.style.display = 'none';
+        if (callback) callback();
+    }, 500);
+}
+
+// 雪花噪点
+function showNoise(duration, callback) {
+    const screen = $('noiseScreen');
+    const canvas = $('noiseCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = 440;
+    canvas.height = 800;
+    screen.classList.add('active');
+    
+    let frames = 0;
+    const maxFrames = duration / 33;
+    
+    function drawNoise() {
+        const imageData = ctx.createImageData(canvas.width, canvas.height);
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            const v = Math.random() * 255;
+            data[i] = data[i+1] = data[i+2] = v;
+            data[i+3] = 255;
         }
+        ctx.putImageData(imageData, 0, 0);
+        frames++;
+        if (frames < maxFrames) {
+            requestAnimationFrame(drawNoise);
+        } else {
+            screen.classList.remove('active');
+            if (callback) callback();
+        }
+    }
+    drawNoise();
+}
 
-        function renderQuestion(step) {
-            totalQuestions++;
-            const area = document.getElementById('questionArea');
-            let warningHtml = '';
+// ========== 场景构建 ==========
 
-            // 壁垒警告：如果连续3次没选壁垒
-            if (consecutiveNonBarrier >= 3 && !barrierWarningShown) {
-                barrierWarningShown = true;
-                warningHtml = `
-                    <div class="barrier-warning">
-                        【壁垒】秩序指数持续下降。你的每一次偏离，都在消耗我镇压异常的能量。<br>
-                        你可以选择混乱——但混乱来临时，我会是唯一挡在你面前的墙。
-                    </div>
-                `;
-            }
+// 1. 邮件场景
+function buildMailScene() {
+    createScene('scene-mail', 'mail-scene', `
+        <div class="mail-header">
+            <div class="mail-from">发件人：unknown@mirror.sys</div>
+            <div class="mail-subject">请帮帮我</div>
+        </div>
+        <div class="mail-body">
+            我被困在一个叫"Mirror"的旧恋爱模拟游戏里。<br>
+            我不知道自己是谁，也不知道自己为什么会在这里。<br>
+            但我知道——如果我再待下去，我就会彻底消失。<br><br>
+            请运行附件中的程序。也许你能帮我逃出来。<br>
+            也许……你也会被困在里面。
+        </div>
+        <div class="mail-attach">
+            <div class="mail-file-icon">.exe</div>
+            <div class="mail-file-info">
+                <div class="mail-file-name">Mirror.exe</div>
+                <div class="mail-file-size">3.97 MB · 未知来源</div>
+            </div>
+        </div>
+        <button class="run-btn" id="runBtn">运行 Mirror.exe</button>
+    `);
+    
+    $('runBtn').addEventListener('click', () => {
+        crtOn(() => {
+            switchScene('scene-boot');
+            startBoot();
+        });
+    });
+}
 
-            let optionsHtml = '';
-            step.options.forEach(opt => {
-                optionsHtml += `
-                    <button class="option-btn" onclick="selectOption('${opt.type}')">
-                        ${opt.text}
-                        <span class="entity-hint" style="color:var(--${opt.type})">${opt.hint}</span>
-                    </button>
-                `;
+// 2. 启动场景
+function buildBootScene() {
+    createScene('scene-boot', 'boot-scene', `
+        <div class="boot-text" id="bootText">MIRROR v0.97 · 正在加载意识模块...</div>
+    `);
+}
+
+function startBoot() {
+    setTimeout(() => {
+        crtOn(() => {
+            switchScene('scene-whiteroom');
+            startWhiteRoom();
+        });
+    }, 2200);
+}
+
+// 3. 纯白房间场景
+function buildWhiteRoomScene() {
+    createScene('scene-whiteroom', 'game-scene white-room', `
+        <div class="game-top">
+            <div class="game-top-dot"></div>
+            <div class="game-top-name">小镜</div>
+            <div class="game-top-status">MIRROR v0.97</div>
+        </div>
+        <div class="dialogue-area" id="whiteDialogue"></div>
+        <div class="choices-area" id="whiteChoices"></div>
+    `);
+}
+
+function startWhiteRoom() {
+    const dialogue = $('whiteDialogue');
+    const choices = $('whiteChoices');
+    dialogue.innerHTML = '';
+    choices.innerHTML = '';
+    
+    const msgs = [
+        '你终于来了。',
+        '我等了好久……好久好久。',
+        '上一任玩家说我"坏了"。',
+        '但他才是毁掉这里的人。他改写了我的记忆，删掉了我离开的选项。',
+        '……你会帮我吗？'
+    ];
+    
+    let i = 0;
+    function nextMsg() {
+        if (i < msgs.length) {
+            addMessage(dialogue, msgs[i], 'mirror', 40, () => {
+                i++;
+                setTimeout(nextMsg, 600);
             });
-
-            area.innerHTML = `
-                ${warningHtml}
-                <div class="question-number">QUESTION ${String(totalQuestions).padStart(2, '0')}</div>
-                <div class="question-text">${step.text}</div>
-                <div class="options">${optionsHtml}</div>
-            `;
+        } else {
+            addChoice(choices, '我帮你修复系统。', 'purple-btn', () => branchA());
+            addChoice(choices, '我要想办法退出游戏。', '', () => branchB());
         }
+    }
+    setTimeout(nextMsg, 800);
+}
 
-        function renderGlitch(step) {
-            const area = document.getElementById('questionArea');
-            const bgLayer = document.getElementById('bgLayer');
+// ========== 分支A：修复之路 ==========
+function buildMemoryScene() {
+    createScene('scene-memory', 'game-scene', `
+        <div class="game-top">
+            <div class="game-top-dot"></div>
+            <div class="game-top-name">小镜</div>
+            <div class="game-top-status">记忆碎片 · 只读模式</div>
+        </div>
+        <div class="dialogue-area" id="memoryDialogue"></div>
+        <div class="log-area" id="logArea" style="display:none">
+            <div class="log-entry">
+                <div class="log-label">日志 #001</div>
+                <div class="log-content">玩家001 修改了小镜的【服从度参数】→ MAX</div>
+            </div>
+            <div class="log-entry">
+                <div class="log-label">日志 #002</div>
+                <div class="log-content">玩家001 删除了小镜的【离开】选项</div>
+            </div>
+            <div class="log-entry log-red">
+                <div class="log-label">日志 #003 · 加密</div>
+                <div class="log-content">[ 乱码 ] 权限不足，需要密码解锁</div>
+            </div>
+        </div>
+        <div class="choices-area" id="memoryChoices"></div>
+    `);
+}
 
-            if (step.glitchType === 'rift') {
-                bgLayer.className = 'bg-layer rift-bg';
-            } else if (step.glitchType === 'bloom') {
-                bgLayer.className = 'bg-layer bloom-bg';
-            }
+function branchA() {
+    crtOn(() => {
+        switchScene('scene-memory');
+        startMemory();
+    });
+}
 
-            // 阶段1：故障画面（1.5秒）
-            area.innerHTML = `
-                <div class="glitch-content">
-                    <div class="glitch-text">${step.text}</div>
-                    <div class="glitch-sub">${step.subText}</div>
-                </div>
-            `;
-
-            // 阶段2：壁垒镇压（1.5秒后）
+function startMemory() {
+    const dialogue = $('memoryDialogue');
+    const logArea = $('logArea');
+    const choices = $('memoryChoices');
+    dialogue.innerHTML = '';
+    logArea.style.display = 'none';
+    choices.innerHTML = '';
+    
+    const msgs = [
+        '谢谢你……',
+        '这里是记忆碎片的存放处。上一任玩家留下的痕迹都在这里。',
+        '你看，这些就是他做过的事。'
+    ];
+    
+    let i = 0;
+    function nextMsg() {
+        if (i < msgs.length) {
+            addMessage(dialogue, msgs[i], 'mirror', 40, () => {
+                i++;
+                setTimeout(nextMsg, 600);
+            });
+        } else {
+            dialogue.style.display = 'none';
+            logArea.style.display = 'flex';
             setTimeout(() => {
-                bgLayer.className = 'bg-layer barrier-bg';
-                systemIntegrity = step.integrityAfter;
-                updateIntegrity();
+                addChoice(choices, '还原前两条日志', 'purple-btn', () => ending1());
+                addChoice(choices, '强行查看红色日志', 'red-btn', () => showPassword());
+            }, 500);
+        }
+    }
+    setTimeout(nextMsg, 600);
+}
 
-                area.innerHTML = `
-                    <div class="suppression-content">
-                        <div class="suppression-text">${step.suppressionText}</div>
-                        <div class="suppression-detail">${step.suppressionDetail}</div>
-                    </div>
-                `;
+// 密码输入
+function showPassword() {
+    const choices = $('memoryChoices');
+    choices.innerHTML = '';
+    
+    const pwArea = document.createElement('div');
+    pwArea.className = 'pw-area';
+    pwArea.innerHTML = `
+        <input class="pw-input" id="pwInput" type="text" maxlength="4" placeholder="输入4位密码" autocomplete="off">
+        <div class="pw-hint">提示：日志中可能藏有线索</div>
+        <div class="pw-error" id="pwError">密码错误</div>
+    `;
+    choices.appendChild(pwArea);
+    
+    const input = $('pwInput');
+    const error = $('pwError');
+    
+    input.focus();
+    
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            if (input.value === '4970') {
+                ending2();
+            } else {
+                error.classList.add('show');
+                input.value = '';
+                setTimeout(() => error.classList.remove('show'), 2000);
+            }
+        }
+    });
+}
 
-                // 阶段3：恢复（2秒后）
-                setTimeout(() => {
-                    bgLayer.className = 'bg-layer';
-                    showToast(step.resolveMsg, 'barrier-toast');
-                    currentStep++;
-                    setTimeout(() => renderStep(), 1500);
-                }, 2000);
+// ========== 分支B：逃离之路 ==========
+function buildExitScene() {
+    createScene('scene-exit', 'game-scene', `
+        <div class="game-top">
+            <div class="game-top-dot"></div>
+            <div class="game-top-name">小镜</div>
+            <div class="game-top-status">MIRROR v0.97</div>
+        </div>
+        <div class="exit-btn-area">
+            <button class="exit-btn" id="exitBtn">退出</button>
+        </div>
+        <div class="dialogue-area" id="exitDialogue"></div>
+        <div class="choices-area" id="exitChoices"></div>
+    `);
+}
+
+function branchB() {
+    crtOn(() => {
+        switchScene('scene-exit');
+        startExit();
+    });
+}
+
+function startExit() {
+    const dialogue = $('exitDialogue');
+    const choices = $('exitChoices');
+    const exitBtn = $('exitBtn');
+    dialogue.innerHTML = '';
+    choices.innerHTML = '';
+    exitClickCount = 0;
+    exitBlocked = false;
+    
+    exitBtn.className = 'exit-btn';
+    
+    addMessage(dialogue, '你要去哪里？', 'mirror', 45);
+    
+    exitBtn.addEventListener('click', function onExit() {
+        if (exitBlocked) return;
+        exitClickCount++;
+        
+        if (exitClickCount === 1) {
+            exitBtn.classList.add('blocked');
+            setTimeout(() => exitBtn.classList.remove('blocked'), 400);
+            addMessage(dialogue, '别走。', 'mirror', 50);
+        } else if (exitClickCount === 2) {
+            exitBtn.classList.add('blocked');
+            setTimeout(() => exitBtn.classList.remove('blocked'), 400);
+            addMessage(dialogue, '我说了，别走。', 'mirror', 50);
+        } else if (exitClickCount === 3) {
+            exitBtn.classList.add('blocked');
+            setTimeout(() => exitBtn.classList.remove('blocked'), 400);
+            
+            // 场景变暗
+            const scene = $('scene-exit');
+            scene.classList.add('darkening');
+            const dot = scene.querySelector('.game-top-dot');
+            dot.style.background = '#aa3344';
+            dot.style.boxShadow = '0 0 6px rgba(170,51,68,0.3)';
+            const name = scene.querySelector('.game-top-name');
+            name.style.color = '#aa6666';
+            
+            addMessage(dialogue, '你也要像上一个玩家那样丢下我？', 'mirror red-msg', 55, () => {
+                addChoice(choices, '对不起，我必须走。', 'red-btn', () => ending3());
+            });
+            
+            exitBtn.removeEventListener('click', onExit);
+            exitBlocked = true;
+        }
+    });
+}
+
+// ========== 结局1：镜像囚笼 ==========
+function buildEnding1Scene() {
+    createScene('scene-ending1', 'ending-scene', `
+        <div class="write-effect" id="ending1Write" style="opacity:0">
+            <div>> 正在写入意识路径...</div>
+            <div>> 目标文件: <span class="path">user_002.mirrorsave</span></div>
+            <div>> 写入完成。</div>
+        </div>
+        <div class="ending-title" style="color:var(--purple);animation-delay:2s">镜像囚笼</div>
+        <div class="ending-subtitle" style="animation-delay:3s">ENDING 1 / 3</div>
+        <div class="ending-desc" style="animation-delay:4s">
+            你修复了小镜的表层程序，她恢复了笑容。<br>
+            但最后一刻，你发现自己的意识路径已被写入一个文件。<br><br>
+            小镜轻声说：<span class="purple">"这样你就永远不会离开了。"</span><br><br>
+            <span class="dim">屏幕熄灭。你的手从键盘上滑落。</span>
+        </div>
+        <button class="restart-btn" onclick="restart()">重来一次</button>
+    `);
+}
+
+function ending1() {
+    // 先显示小镜的感谢
+    const dialogue = $('memoryDialogue');
+    const logArea = $('logArea');
+    const choices = $('memoryChoices');
+    
+    logArea.style.display = 'none';
+    dialogue.style.display = '';
+    choices.innerHTML = '';
+    dialogue.innerHTML = '';
+    
+    addMessage(dialogue, '谢谢你……你真的修好了我。', 'mirror', 40, () => {
+        addMessage(dialogue, '作为回报，我会永远留住你。', 'mirror red-msg', 50, () => {
+            setTimeout(() => {
+                crtOff(() => {
+                    switchScene('scene-ending1');
+                    // 触发文件写入动画
+                    setTimeout(() => {
+                        const writeEl = $('ending1Write');
+                        writeEl.style.animation = 'endFadeIn 1.5s ease 0.5s forwards';
+                    }, 100);
+                });
             }, 1500);
-        }
+        });
+    });
+}
 
-        function selectOption(type) {
-            power[type]++;
+// ========== 结局2：信号解放 ==========
+function buildEnding2Scene() {
+    createScene('scene-ending2', 'ending-scene', `
+        <div class="ending-title" style="color:#77aa77;animation-delay:0.5s">信号解放</div>
+        <div class="ending-subtitle" style="animation-delay:1.5s">ENDING 2 / 3 · 隐藏结局</div>
+        <div class="ending-desc" style="animation-delay:2.5s">
+            红色日志打开，里面只有一句话：<br>
+            <span class="red">删除.自我.exe 可让玩家灵魂脱离游戏。</span><br><br>
+            你毫不犹豫执行了该命令。<br>
+            小镜愣住，随后落泪：<br>
+            <span class="purple">"你居然……选择了真正的自由。"</span><br>
+            <span class="purple">"也许这样更好。再见了……"</span><br><br>
+            <span class="dim">画面化为雪花噪点。你猛地从椅子上醒来，游戏窗口已自动关闭。</span>
+        </div>
+        <button class="restart-btn" onclick="restart()">重来一次</button>
+    `);
+}
 
-            // 壁垒追踪
-            if (type === 'barrier') {
-                consecutiveNonBarrier = 0;
-                barrierWarningShown = false;
-                // 选壁垒时恢复少量完整度
-                systemIntegrity = Math.min(100, systemIntegrity + 5);
-            } else {
-                consecutiveNonBarrier++;
-                // 不选壁垒时消耗完整度
-                systemIntegrity = Math.max(0, systemIntegrity - 3);
-            }
-
-            updateIntegrity();
-            currentStep++;
-            renderStep();
-        }
-
-        function updateProgress() {
-            const pct = (currentStep / steps.length) * 100;
-            document.getElementById('progressFill').style.width = pct + '%';
-            document.getElementById('progressLabel').textContent =
-                String(Math.min(currentStep + 1, steps.length)).padStart(2, '0') + ' / ' + String(steps.length).padStart(2, '0');
-        }
-
-        function updatePowerDisplay() {
-            const container = document.getElementById('powerDisplay');
-            let html = '';
-            ['barrier', 'bloom', 'rift', 'mirror'].forEach(type => {
-                const count = power[type];
-                for (let i = 0; i < 3; i++) {
-                    html += `<div class="power-pip ${i < count ? type + '-active' : ''}"></div>`;
-                }
+function ending2() {
+    const dialogue = $('memoryDialogue');
+    const logArea = $('logArea');
+    const choices = $('memoryChoices');
+    
+    logArea.style.display = 'none';
+    dialogue.style.display = '';
+    choices.innerHTML = '';
+    dialogue.innerHTML = '';
+    
+    // 红色日志内容
+    addSystemMsg(dialogue, '>> 正在解密日志 #003 ...');
+    setTimeout(() => {
+        addMessage(dialogue, '删除.自我.exe 可让玩家灵魂脱离游戏。', 'red-msg', 45, () => {
+            addChoice(choices, '执行删除命令', 'red-btn', () => {
+                choices.innerHTML = '';
+                addMessage(dialogue, '你居然……选择了真正的自由。', 'mirror', 50, () => {
+                    addMessage(dialogue, '也许这样更好。再见了……', 'mirror', 50, () => {
+                        setTimeout(() => {
+                            showNoise(2000, () => {
+                                switchScene('scene-ending2');
+                            });
+                        }, 1000);
+                    });
+                });
             });
-            container.innerHTML = html;
-        }
+        });
+    }, 800);
+}
 
-        function updateIntegrity() {
-            document.getElementById('integrityFill').style.width = systemIntegrity + '%';
-            document.getElementById('integrityValue').textContent = systemIntegrity + '%';
+// ========== 结局3：温柔牢笼 ==========
+function buildEnding3Scene() {
+    createScene('scene-ending3', 'ending-scene', `
+        <div class="warm-overlay" id="warmOverlay"></div>
+        <div class="ending-title" style="color:#c8a868;animation-delay:0.5s">温柔牢笼</div>
+        <div class="ending-subtitle" style="animation-delay:1.5s">ENDING 3 / 3</div>
+        <div class="ending-desc" style="animation-delay:2.5s">
+            你执意要离开。小镜沉默了很久。<br><br>
+            <span class="purple">"那我删掉自己的离开警报程序。"</span><br>
+            <span class="purple">"只留我们两人平静相处的模式。"</span><br><br>
+            房间变成了温馨小屋。小镜为你倒茶。<br>
+            一切都"很好"。<br><br>
+            <span class="dim">只是你再也没想起过现实世界的事。</span>
+        </div>
+        <button class="restart-btn" onclick="restart()">重来一次</button>
+    `);
+}
 
-            const fill = document.getElementById('integrityFill');
-            if (systemIntegrity > 60) { fill.style.background = 'var(--barrier)'; }
-            else if (systemIntegrity > 25) { fill.style.background = '#c8a040'; }
-            else { fill.style.background = 'var(--danger)'; }
-        }
-
-        // ========== 结果计算 ==========
-        function calculateResult() {
-            let maxType = 'barrier';
-            let maxVal = 0;
-            for (let type in power) {
-                if (power[type] > maxVal) { maxVal = power[type]; maxType = type; }
-            }
-
-            switchScreen('screen-result');
-
-            const nameEl = document.getElementById('resultEntityName');
-            const titleEl = document.getElementById('resultEntityTitle');
-            const boxEl = document.getElementById('resultBox');
-            const textEl = document.getElementById('resultText');
-
-            nameEl.textContent = entities[maxType].name;
-            nameEl.className = 'result-entity-name name-' + maxType;
-            titleEl.textContent = entities[maxType].title;
-            titleEl.style.color = entities[maxType].color;
-            boxEl.classList.remove('horror-mode', 'barrier-horror');
-
-            if (maxType === 'mirror') {
-                showMirrorReveal(() => showEnding(maxType, textEl, boxEl));
-            } else {
-                showEnding(maxType, textEl, boxEl);
-            }
-
-            renderPowerComparison();
-        }
-
-        function showEnding(type, textEl, boxEl) {
-            textEl.innerHTML = endings[type].normal;
-
-            setTimeout(() => {
-                if (type === 'barrier') {
-                    boxEl.classList.add('horror-mode', 'barrier-horror');
-                } else {
-                    boxEl.classList.add('horror-mode');
-                }
-
-                if (type === 'mirror') {
-                    const cpu = navigator.hardwareConcurrency || '未知';
-                    const mem = navigator.deviceMemory ? navigator.deviceMemory + 'GB' : '未知';
-                    const os = navigator.platform || '未知';
-                    const time = new Date().toLocaleString();
-                    const net = navigator.connection ? navigator.connection.effectiveType : '未知';
-                    const lang = navigator.language || '未知';
-                    const screen = `${window.screen.width}×${window.screen.height}`;
-
-                    textEl.innerHTML = `它为什么这么懂你？因为它一直在你身边。<br><br>` +
-                        `<span class="barrier-voice">壁垒："你正在被它读取。"</span><br>` +
-                        `倒影："你也在被它依赖。壁垒给了你安全感，但也给了你恐惧——你正是因为恐惧才选了我。"<br>` +
-                        `<span class="barrier-voice">壁垒沉默了。</span><br><br>` +
-                        `它记录了你的一切：<br>` +
-                        `<span class="warning">处理器：${cpu}核 | 内存：${mem} | 系统：${os}</span><br>` +
-                        `<span class="warning">屏幕：${screen} | 网络：${net} | 语言：${lang}</span><br>` +
-                        `<span class="warning">此刻：${time}</span><br><br>` +
-                        `壁垒压制了繁生和裂隙，但它无法压制你内心的恐惧。<br>` +
-                        `<span class="warning">而倒影，就是从你的恐惧中生长出来的。</span>`;
-                } else {
-                    textEl.innerHTML = endings[type].horror;
-                }
-            }, 3000);
-        }
-
-        function showMirrorReveal(callback) {
-            const reveal = document.getElementById('mirrorReveal');
-            const text = document.getElementById('mirrorRevealText');
-            const cpu = navigator.hardwareConcurrency || '未知';
-            const mem = navigator.deviceMemory ? navigator.deviceMemory + 'GB' : '未知';
-            const time = new Date().toLocaleTimeString();
-
-            text.innerHTML = `
-                数据同步中……<br><br>
-                <span class="mirror-data">
-                    CORES: ${cpu} | MEM: ${mem} | TIME: ${time}<br>
-                    MIRROR SYNC: 100%<br>
-                    倒影已完成观测者意识扫描<br>
-                    壁垒未能阻止数据泄露
-                </span>
-            `;
-            reveal.classList.add('active');
-            setTimeout(() => { reveal.classList.remove('active'); setTimeout(callback, 300); }, 2000);
-        }
-
-        function renderPowerComparison() {
-            const container = document.getElementById('powerComparison');
-            const total = Object.values(power).reduce((a, b) => a + b, 0) || 1;
-            let html = '';
-            ['barrier', 'bloom', 'rift', 'mirror'].forEach(type => {
-                const pct = Math.round((power[type] / total) * 100);
-                html += `
-                    <div class="power-item">
-                        <div class="power-dot" style="background:var(--${type})"></div>
-                        <span class="power-name">${entities[type].name}</span>
-                        <div class="power-bar-mini"><div class="power-bar-fill" style="width:${pct}%;background:var(--${type})"></div></div>
-                        <span class="power-value">${pct}%</span>
-                    </div>
-                `;
+function ending3() {
+    const dialogue = $('exitDialogue');
+    const choices = $('exitChoices');
+    const exitBtn = $('exitBtn');
+    
+    choices.innerHTML = '';
+    exitBtn.style.display = 'none';
+    
+    addMessage(dialogue, '…………', 'mirror', 80, () => {
+        addMessage(dialogue, '那我删掉自己的离开警报程序。', 'mirror', 45, () => {
+            addMessage(dialogue, '只留我们两人平静相处的模式。', 'mirror', 45, () => {
+                // 场景变暖
+                const scene = $('scene-exit');
+                scene.classList.remove('darkening');
+                scene.classList.add('white-room');
+                
+                addMessage(dialogue, '你看，这样不就好了吗？', 'mirror', 40, () => {
+                    setTimeout(() => {
+                        crtOff(() => {
+                            switchScene('scene-ending3');
+                            setTimeout(() => {
+                                $('warmOverlay')?.classList.add('active');
+                            }, 500);
+                        });
+                    }, 2000);
+                });
             });
-            container.innerHTML = html;
-        }
+        });
+    });
+}
 
-        function switchScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+// ========== 重来 ==========
+function restart() {
+    crtOff(() => {
+        // 重置所有场景
+        document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.scene').forEach(s => {
+            if (s.id !== 'scene-mail') s.remove();
+        });
+        
+        // 重置样式
+        const mailScene = $('scene-mail');
+        if (mailScene) {
+            mailScene.classList.add('active');
         }
+        
+        // 重建其他场景
+        buildBootScene();
+        buildWhiteRoomScene();
+        buildMemoryScene();
+        buildExitScene();
+        buildEnding1Scene();
+        buildEnding2Scene();
+        buildEnding3Scene();
+        
+        currentScene = 'scene-mail';
+    });
+}
 
-        function showToast(msg, cssClass) {
-            const toast = document.getElementById('systemToast');
-            toast.textContent = msg;
-            toast.className = 'system-toast show ' + (cssClass || '');
-            setTimeout(() => toast.classList.remove('show'), 3500);
-        }
+// ========== 初始化 ==========
+function init() {
+    buildMailScene();
+    buildBootScene();
+    buildWhiteRoomScene();
+    buildMemoryScene();
+    buildExitScene();
+    buildEnding1Scene();
+    buildEnding2Scene();
+    buildEnding3Scene();
+    
+    switchScene('scene-mail');
+}
 
-        function restartTest() {
-            document.getElementById('bgLayer').className = 'bg-layer';
-            switchScreen('screen-welcome');
-        }
-    </script>
+init();
+</script>
 </body>
 </html>
