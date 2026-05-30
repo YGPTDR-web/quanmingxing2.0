@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>异常频段干涉协议</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <div class="atmosphere"></div>
+
+    <div class="content">
+        <header class="header">
+            <h1 class="title">异常频段干涉协议</h1>
+            <p class="subtitle">点击异常档案展开观测数据，点击右侧按钮执行干涉</p>
+        </header>
+
+        <div class="hero-list">
+            <!-- α-静默 -->
+            <div class="hero-card">
+                <div class="card-header" onclick="toggleCard(this)">
+                    <div class="hero-symbol symbol-alpha">—</div>
+                    <div class="hero-info">
+                        <h2 class="hero-name">α-静默</h2>
+                        <span class="version-badge version-hot">最高频段</span>
+                    </div>
+                    <button class="select-btn" onclick="event.stopPropagation(); openModal('α-静默')">执行干涉</button>
+                </div>
+                <div class="hero-details">
+                    <div class="detail-section">
+                        <h3><i>◈</i> 高频干涉区</h3>
+                        <div class="game-tags">
+                            <span class="game-tag tag-main">孤立态</span>
+                            <span class="game-tag tag-main">攀爬态</span>
+                            <span class="game-tag tag-main">构建态</span>
+                            <span class="game-tag tag-main">探索态</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <h3><i>◈</i> 观测特征</h3>
+                        <p>数值极其稳定，波动趋近于零。看似无害，但能强行压制其他所有异常的活跃度，用绝对的静止抹杀一切。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- β-繁生 -->
+            <div class="hero-card">
+                <div class="card-header" onclick="toggleCard(this)">
+                    <div class="hero-symbol symbol-beta">◎</div>
+                    <div class="hero-info">
+                        <h2 class="hero-name">β-繁生</h2>
+                        <span class="version-badge version-strong">干涉极强</span>
+                    </div>
+                    <button class="select-btn" onclick="event.stopPropagation(); openModal('β-繁生')">执行干涉</button>
+                </div>
+                <div class="hero-details">
+                    <div class="detail-section">
+                        <h3><i>◈</i> 高频干涉区</h3>
+                        <div class="game-tags">
+                            <span class="game-tag tag-main">构建态</span>
+                            <span class="game-tag tag-main">探索态</span>
+                        </div>
+                        <h3><i>◈</i> 偶发波动区</h3>
+                        <div class="game-tags">
+                            <span class="game-tag tag-occasional">孤立态</span>
+                            <span class="game-tag tag-occasional">攀爬态</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <h3><i>◈</i> 观测特征</h3>
+                        <p>具有极强的自我复制与重组倾向。在构建态中表现为极度繁荣的创造，但在孤立态中会因资源耗尽而吞噬自身。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- γ-裂隙 -->
+            <div class="hero-card">
+                <div class="card-header" onclick="toggleCard(this)">
+                    <div class="hero-symbol symbol-gamma">⋊</div>
+                    <div class="hero-info">
+                        <h2 class="hero-name">γ-裂隙</h2>
+                        <span class="version-badge version-dark">不可控变量</span>
+                    </div>
+                    <button class="select-btn" onclick="event.stopPropagation(); openModal('γ-裂隙')">执行干涉</button>
+                </div>
+                <div class="hero-details">
+                    <div class="detail-section">
+                        <h3><i>◈</i> 高频干涉区</h3>
+                        <div class="game-tags">
+                            <span class="game-tag tag-main">孤立态</span>
+                        </div>
+                        <h3><i>◈</i> 偶发波动区</h3>
+                        <div class="game-tags">
+                            <span class="game-tag tag-occasional">冲突态</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <h3><i>◈</i> 观测特征</h3>
+                        <p>极度不稳定，经常导致系统边界破损。虽然破坏力极强，但往往是打破死局、引入外部信息的唯一变量。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- δ-倒影 -->
+            <div class="hero-card card-anomaly">
+                <div class="card-header" onclick="toggleCard(this)">
+                    <div class="hero-symbol symbol-delta">∅</div>
+                    <div class="hero-info">
+                        <h2 class="hero-name">δ-倒影</h2>
+                        <span class="version-badge version-gold">全频段响应</span>
+                    </div>
+                    <button class="select-btn" onclick="event.stopPropagation(); openModal('δ-倒影')">执行干涉</button>
+                </div>
+                <div class="hero-details">
+                    <div class="detail-section">
+                        <h3><i>◈</i> 高频干涉区</h3>
+                        <div class="game-tags">
+                            <span class="game-tag tag-main">孤立态</span>
+                        </div>
+                        <h3><i>◈</i> 偶发波动区</h3>
+                        <div class="game-tags">
+                            <span class="game-tag tag-occasional">冲突态</span>
+                            <span class="game-tag tag-occasional">竞技态</span>
+                            <span class="game-tag tag-occasional">超常态</span>
+                            <span class="game-tag tag-occasional">探索态</span>
+                        </div>
+                        <h3><i>◈</i> 排斥区</h3>
+                        <div class="game-tags">
+                            <span class="game-tag tag-barely">构建态</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <h3><i>◈</i> 观测特征</h3>
+                        <p>适应性极强，观测结果随观测者意志改变。<span class="warning-text">⚠️警告：切勿长时间注视，其反馈数据可能并非源自本体，而是源自观测者自身的潜意识投射。</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>⚠️ 提示：输入框只接受"α-静默、β-繁生、γ-裂隙、δ-倒影"四个实体代号</p>
+        </footer>
+    </div>
+
+    <!-- 弹窗 -->
+    <div class="modal-overlay" id="selectModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 class="modal-title">确认干涉协议</h2>
+            <p class="modal-desc">你正在选择 <span class="hero-name-highlight" id="modalHeroName"></span> 作为干涉实体</p>
+            
+            <div class="modal-input-group">
+                <input type="text" id="modalInput" placeholder="请输入观测者代号以验证权限">
+            </div>
+            
+            <div class="modal-message" id="modalMessage"></div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">终止协议</button>
+                <button class="modal-btn modal-btn-confirm" onclick="confirmSelection()">确认执行</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
