@@ -3,303 +3,690 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>深层心智镜像测试</title>
+    <title>原初博弈 · 意识锚点测试</title>
     <style>
         :root {
-            --bg: #050505; --fg: #e0e0e0; --muted: #555;
-            --accent: #a8a8a8; --danger: #ff1a1a;
+            --bg: #030303; --fg: #d0d0d0; --muted: #444;
+            --accent: #888; --danger: #cc0000;
+            --barrier: #4a7c9b; --bloom: #3d6b3d; --rift: #8b3a3a; --mirror: #6b5b8d;
         }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            margin: 0; padding: 0; background: var(--bg); color: var(--fg);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden;
+            background: var(--bg); color: var(--fg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden; position: relative;
         }
-        .container { width: 100%; max-width: 600px; padding: 40px 20px; position: relative; z-index: 2; }
-        .screen { display: none; animation: fadeIn 0.8s ease; }
-        .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 欢迎页 */
-        .welcome-title { font-size: 2.2rem; font-weight: 300; letter-spacing: 2px; text-align: center; margin-bottom: 20px; color: #fff; }
-        .welcome-desc { font-size: 1rem; color: var(--muted); text-align: center; line-height: 1.8; margin-bottom: 40px; }
+        /* 背景层 */
+        .bg-layer {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background: radial-gradient(ellipse at 50% 50%, rgba(15,15,20,1) 0%, rgba(3,3,3,1) 70%);
+            transition: background 1s ease;
+        }
+        .bg-layer.rift-bg { background: radial-gradient(ellipse at 50% 50%, rgba(40,5,5,1) 0%, rgba(3,3,3,1) 70%); }
+        .bg-layer.bloom-bg { background: radial-gradient(ellipse at 50% 50%, rgba(5,25,5,1) 0%, rgba(3,3,3,1) 70%); }
+        .bg-layer.mirror-bg { background: radial-gradient(ellipse at 50% 50%, rgba(20,15,30,1) 0%, rgba(3,3,3,1) 70%); }
+
+        /* 扫描线效果 */
+        .scanlines {
+            position: fixed; inset: 0; z-index: 1; pointer-events: none;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+            opacity: 0.3;
+        }
+
+        .container { width: 100%; max-width: 640px; padding: 30px 20px; position: relative; z-index: 10; }
+
+        /* 页面控制 */
+        .screen { display: none; }
+        .screen.active { display: block; animation: screenIn 0.6s ease; }
+        @keyframes screenIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* === 欢迎页 === */
+        .welcome-title {
+            font-size: 2rem; font-weight: 300; letter-spacing: 4px; text-align: center;
+            margin-bottom: 15px; color: #fff;
+        }
+        .welcome-sub {
+            font-size: 0.85rem; color: var(--muted); text-align: center; letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+        .welcome-desc {
+            font-size: 0.95rem; color: #777; text-align: center; line-height: 2; margin-bottom: 40px;
+        }
+        .entity-preview {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 40px;
+        }
+        .entity-tag {
+            padding: 10px; text-align: center; font-size: 0.8rem; letter-spacing: 1px;
+            border: 1px solid rgba(255,255,255,0.06); border-radius: 2px;
+            background: rgba(255,255,255,0.02);
+        }
+        .entity-tag span { display: block; font-size: 0.7rem; color: #555; margin-top: 4px; }
+        .tag-barrier { border-color: rgba(74,124,155,0.3); color: var(--barrier); }
+        .tag-bloom { border-color: rgba(61,107,61,0.3); color: var(--bloom); }
+        .tag-rift { border-color: rgba(139,58,58,0.3); color: var(--rift); }
+        .tag-mirror { border-color: rgba(107,91,141,0.3); color: var(--mirror); }
+
         .start-btn {
-            display: block; width: 200px; margin: 0 auto; padding: 15px 0;
-            background: transparent; border: 1px solid var(--accent); color: var(--fg);
-            font-size: 1rem; letter-spacing: 1px; cursor: pointer; transition: all 0.3s;
+            display: block; width: 180px; margin: 0 auto; padding: 14px 0;
+            background: transparent; border: 1px solid #333; color: #999;
+            font-size: 0.9rem; letter-spacing: 2px; cursor: pointer; transition: all 0.4s;
         }
-        .start-btn:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+        .start-btn:hover { border-color: #666; color: #ccc; background: rgba(255,255,255,0.03); }
 
-        /* 测试页 */
-        .progress-bar { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-bottom: 40px; }
-        .progress-fill { height: 100%; background: var(--accent); transition: width 0.5s ease; }
-        .question-text { font-size: 1.4rem; font-weight: 300; line-height: 1.6; margin-bottom: 40px; min-height: 100px; }
-        .options { display: flex; flex-direction: column; gap: 15px; }
+        /* === 测试页 === */
+        .test-header { margin-bottom: 30px; }
+        .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .progress-label { font-size: 0.7rem; color: #444; letter-spacing: 1px; white-space: nowrap; }
+        .progress-bar { flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+        .progress-fill { height: 100%; background: var(--accent); transition: width 0.6s ease; }
+
+        /* 力量指示器 */
+        .power-display {
+            display: flex; gap: 4px; justify-content: center; margin-bottom: 25px; opacity: 0.6;
+        }
+        .power-pip {
+            width: 6px; height: 6px; border-radius: 50%; background: #222; transition: all 0.5s;
+        }
+        .power-pip.barrier-active { background: var(--barrier); box-shadow: 0 0 4px var(--barrier); }
+        .power-pip.bloom-active { background: var(--bloom); box-shadow: 0 0 4px var(--bloom); }
+        .power-pip.rift-active { background: var(--rift); box-shadow: 0 0 4px var(--rift); }
+        .power-pip.mirror-active { background: var(--mirror); box-shadow: 0 0 4px var(--mirror); }
+
+        .question-area {
+            min-height: 280px; display: flex; flex-direction: column; justify-content: center;
+        }
+        .question-number {
+            font-size: 0.7rem; color: #333; letter-spacing: 2px; margin-bottom: 15px;
+        }
+        .question-text {
+            font-size: 1.25rem; font-weight: 300; line-height: 1.8; margin-bottom: 35px; color: #bbb;
+        }
+        .options { display: flex; flex-direction: column; gap: 10px; }
         .option-btn {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
-            padding: 20px; text-align: left; cursor: pointer; transition: all 0.3s;
-            font-size: 1rem; color: var(--fg); border-radius: 4px;
+            background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.06);
+            padding: 18px 20px; text-align: left; cursor: pointer; transition: all 0.3s;
+            font-size: 0.92rem; color: #999; border-radius: 2px; line-height: 1.5;
         }
-        .option-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); }
+        .option-btn:hover {
+            background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); color: #ccc;
+        }
+        .option-btn .entity-hint {
+            display: inline-block; font-size: 0.65rem; margin-left: 8px; opacity: 0;
+            transition: opacity 0.3s; letter-spacing: 1px;
+        }
+        .option-btn:hover .entity-hint { opacity: 0.5; }
 
-        /* 故障题特效 */
-        .glitch-screen { color: var(--danger); font-size: 1.8rem; font-weight: bold; text-align: center; animation: glitch-text 0.2s infinite; }
-        @keyframes glitch-text {
-            0% { transform: translate(0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, -2px); } 100% { transform: translate(0); }
+        /* 故障题 */
+        .glitch-content {
+            text-align: center; padding: 40px 0;
         }
+        .glitch-text {
+            font-size: 1.4rem; color: var(--danger); font-weight: 700;
+            animation: glitchShake 0.15s infinite; line-height: 1.8;
+        }
+        @keyframes glitchShake {
+            0% { transform: translate(0); }
+            25% { transform: translate(-2px, 1px); }
+            50% { transform: translate(2px, -1px); }
+            75% { transform: translate(-1px, -2px); }
+            100% { transform: translate(1px, 2px); }
+        }
+        .glitch-sub { font-size: 0.85rem; color: #660000; margin-top: 15px; animation: blink 0.4s infinite; }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* 系统提示 */
         .system-toast {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.9); border: 1px solid var(--accent); color: var(--accent);
-            padding: 10px 25px; border-radius: 4px; font-size: 0.9rem; z-index: 100; opacity: 0;
-            transition: opacity 0.3s; pointer-events: none;
+            position: fixed; top: 0; left: 0; right: 0; padding: 12px 20px;
+            background: rgba(0,0,0,0.95); border-bottom: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.8rem; color: var(--accent); text-align: center; letter-spacing: 1px;
+            z-index: 100; transform: translateY(-100%); transition: transform 0.4s ease;
         }
-        .system-toast.show { opacity: 1; }
+        .system-toast.show { transform: translateY(0); }
+        .system-toast.barrier-toast { color: var(--barrier); border-color: rgba(74,124,155,0.3); }
+        .system-toast.bloom-toast { color: var(--bloom); border-color: rgba(61,107,61,0.3); }
+        .system-toast.rift-toast { color: var(--rift); border-color: rgba(139,58,58,0.3); }
+        .system-toast.mirror-toast { color: var(--mirror); border-color: rgba(107,91,141,0.3); }
 
-        /* 结果页 */
-        .result-title { font-size: 1.5rem; color: var(--accent); margin-bottom: 30px; text-align: center; letter-spacing: 2px; }
+        /* === 结果页 === */
+        .result-title {
+            font-size: 1.2rem; color: #555; text-align: center; letter-spacing: 3px; margin-bottom: 30px;
+        }
+        .result-entity-name {
+            font-size: 2.5rem; font-weight: 300; text-align: center; margin-bottom: 8px;
+            animation: fadeInSlow 1.5s ease;
+        }
+        .result-entity-title {
+            font-size: 0.8rem; text-align: center; letter-spacing: 2px; margin-bottom: 30px;
+        }
+        .name-barrier { color: var(--barrier); }
+        .name-bloom { color: var(--bloom); }
+        .name-rift { color: var(--rift); }
+        .name-mirror { color: var(--mirror); }
+
+        @keyframes fadeInSlow { from { opacity: 0; } to { opacity: 1; } }
+
         .result-box {
-            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1);
-            padding: 30px; margin-bottom: 30px; border-radius: 4px; min-height: 150px; position: relative; overflow: hidden;
+            background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.06);
+            padding: 30px; margin-bottom: 25px; border-radius: 2px; position: relative;
+            transition: all 0.5s;
         }
-        .result-text { font-size: 1.1rem; line-height: 2; color: #ccc; }
-        .warning-text { color: var(--danger); font-weight: bold; }
-        
-        .result-box.glitch-effect { animation: box-glitch 0.3s infinite; background: rgba(50,0,0,0.2); border-color: var(--danger); }
-        @keyframes box-glitch {
-            0% { transform: skew(0deg); } 20% { transform: skew(2deg); } 40% { transform: skew(-2deg); } 60% { transform: skew(1deg); } 80% { transform: skew(-1deg); } 100% { transform: skew(0deg); }
+        .result-text { font-size: 1rem; line-height: 2; color: #999; }
+        .result-text .highlight { color: #ccc; font-weight: 500; }
+
+        /* 结果页反转特效 */
+        .result-box.horror-mode {
+            border-color: rgba(255,0,0,0.2); background: rgba(50,0,0,0.1);
+            animation: resultGlitch 0.2s infinite;
+        }
+        @keyframes resultGlitch {
+            0% { transform: skew(0deg); }
+            30% { transform: skew(0.5deg); }
+            70% { transform: skew(-0.5deg); }
+            100% { transform: skew(0deg); }
+        }
+        .warning { color: var(--danger); font-weight: 700; }
+
+        /* 力量对比条 */
+        .power-comparison {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 25px;
+        }
+        .power-item {
+            display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+            background: rgba(255,255,255,0.02); border-radius: 2px;
+        }
+        .power-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+        .power-name { font-size: 0.75rem; color: #555; flex: 1; }
+        .power-value { font-size: 0.75rem; color: #777; font-weight: 500; }
+        .power-bar-mini { width: 40px; height: 2px; background: #111; border-radius: 1px; overflow: hidden; }
+        .power-bar-fill { height: 100%; border-radius: 1px; transition: width 1s ease; }
+
+        .restart-btn {
+            display: block; margin: 0 auto; padding: 10px 20px;
+            background: transparent; border: 1px solid #222; color: #444;
+            font-size: 0.8rem; cursor: pointer; transition: all 0.3s; letter-spacing: 1px;
+        }
+        .restart-btn:hover { border-color: #444; color: #666; }
+
+        /* 倒影揭示画面 */
+        .mirror-reveal {
+            position: fixed; inset: 0; z-index: 200; background: #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s;
+        }
+        .mirror-reveal.active { opacity: 1; pointer-events: all; }
+        .mirror-reveal-text {
+            font-size: 0.85rem; color: var(--mirror); letter-spacing: 1px;
+            text-align: center; line-height: 2;
+        }
+        .mirror-data {
+            font-size: 0.75rem; color: #9b59b6; margin-top: 15px;
+            font-family: monospace;
         }
 
-        .restart-btn { display: block; margin: 0 auto; padding: 10px 20px; background: transparent; border: 1px solid var(--muted); color: var(--muted); cursor: pointer; transition: all 0.3s; }
-        .restart-btn:hover { border-color: var(--fg); color: var(--fg); }
-
-        .bg-glow {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 800px; height: 800px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(20,20,30,0.8) 0%, rgba(5,5,5,1) 70%); z-index: 1; pointer-events: none;
+        @media (max-width: 480px) {
+            .welcome-title { font-size: 1.5rem; }
+            .question-text { font-size: 1.1rem; }
+            .result-entity-name { font-size: 2rem; }
         }
     </style>
 </head>
 <body>
-    <div class="bg-glow"></div>
-    <div id="system-toast" class="system-toast"></div>
+    <div id="bgLayer" class="bg-layer"></div>
+    <div class="scanlines"></div>
+
+    <div id="systemToast" class="system-toast"></div>
+
+    <div id="mirrorReveal" class="mirror-reveal">
+        <div class="mirror-reveal-text" id="mirrorRevealText"></div>
+    </div>
 
     <div class="container">
+        <!-- 欢迎页 -->
         <section id="screen-welcome" class="screen active">
-            <h1 class="welcome-title">深层心智镜像</h1>
-            <p class="welcome-desc">系统将模拟10个极端情境，提取你的潜意识偏好。<br>请务必根据第一直觉作答。<br>如果出现异常，请勿恐慌。</p>
-            <button class="start-btn" onclick="startTest()">开始解析</button>
+            <h1 class="welcome-title">原 初 博 弈</h1>
+            <p class="welcome-sub">意 识 锚 点 测 试</p>
+            <p class="welcome-desc">
+                四个原初实体共存于系统的底层。<br>
+                它们互相制衡，互相吞噬，维持着脆弱的平衡。<br>
+                你的意识是它们争夺的锚点。<br>
+                你的每一个选择，都将改变力量格局。
+            </p>
+            <div class="entity-preview">
+                <div class="entity-tag tag-barrier">壁垒<span>秩序 · 压制</span></div>
+                <div class="entity-tag tag-bloom">繁生<span>生育 · 吞噬</span></div>
+                <div class="entity-tag tag-rift">裂隙<span>混乱 · 撕裂</span></div>
+                <div class="entity-tag tag-mirror">倒影<span>欺骗 · 映射</span></div>
+            </div>
+            <button class="start-btn" onclick="startTest()">进 入 博 弈</button>
         </section>
 
+        <!-- 测试页 -->
         <section id="screen-test" class="screen">
-            <div class="progress-bar"><div id="progress-fill" class="progress-fill" style="width: 0%"></div></div>
-            <div id="question-container" style="transition: opacity 0.4s ease;">
-                <h2 id="question-text" class="question-text"></h2>
-                <div id="options-container" class="options"></div>
+            <div class="test-header">
+                <div class="progress-row">
+                    <span class="progress-label" id="progressLabel">01 / 10</span>
+                    <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width:0%"></div></div>
+                </div>
+                <div class="power-display" id="powerDisplay"></div>
             </div>
+            <div class="question-area" id="questionArea"></div>
         </section>
 
+        <!-- 结果页 -->
         <section id="screen-result" class="screen">
-            <h2 class="result-title">解析完成</h2>
-            <div id="result-box" class="result-box">
-                <p id="result-text" class="result-text"></p>
+            <p class="result-title">锚 点 归 属</p>
+            <div id="resultEntityName" class="result-entity-name"></div>
+            <div id="resultEntityTitle" class="result-entity-title"></div>
+            <div id="resultBox" class="result-box">
+                <p id="resultText" class="result-text"></p>
             </div>
+            <div id="powerComparison" class="power-comparison"></div>
             <button class="restart-btn" onclick="restartTest()">重新测试</button>
         </section>
     </div>
 
     <script>
-        const questions = [
-            { text: "深夜，你被困在一个不断坍缩的迷宫中。你需要一个同伴，你最希望他具备哪种特质？", options: [
-                { text: "绝对的理智：压制恐惧，用冷酷逻辑找到出口。", type: "order" },
-                { text: "无尽的活力：分裂出无数分身，用命填出一条路。", type: "bloom" },
-                { text: "破坏的渴望：管他什么规则，把墙砸烂就是了。", type: "rift" },
-                { text: "完美的适配：他总能提前猜到你的想法，刚好出现。", type: "mirror" }
-            ]},
-            { text: "你获得了一台可以创造世界的机器，但你只能输入一条核心规则：", options: [
-                { text: "万物皆数：所有事物必须遵循严密的数学法则。", type: "order" },
-                { text: "野蛮生长：给予一切物质最原始的繁衍冲动。", type: "bloom" },
-                { text: "绝对混沌：每隔一秒，随机改变一条物理定律。", type: "rift" },
-                { text: "意识映射：世界会根据观察者的期望自动演变。", type: "mirror" }
-            ]},
-            { text: "当你面对一个无法理解的恐惧神明时，什么样的盟友能让你安心？", options: [
-                { text: "沉默的壁垒：如大山般稳固，隔绝神明的视线。", type: "order" },
-                { text: "进化的巨兽：吞噬神明的力量，变为自身养料。", type: "bloom" },
-                { text: "同归于尽的疯子：比你更疯狂，拉着神明下地狱。", type: "rift" },
-                { text: "另一个自己：完全懂你的恐惧，为你定制安抚话术。", type: "mirror" }
-            ]},
-            { text: "如果你必须失去一种感官，换取一种能力，你会选择：", options: [
-                { text: "失去痛觉，换取永不疲惫的躯体。", type: "order" },
-                { text: "失去味觉，换取能与万物沟通的灵识。", type: "bloom" },
-                { text: "失去视觉，换取感知一切危险的本能。", type: "rift" },
-                { text: "失去方向感，换取瞬间移动到安全地的能力。", type: "mirror" }
-            ]},
-            // 第5题：故障题
-            { text: "⚠️ 警告：检测到观测者意识波动异常！防线正在瓦解！它正在看...它不是选项！别让它...", isGlitch: true },
-            { text: "刚才的系统波动是否影响了你的情绪？", options: [
-                { text: "没有，我依然保持绝对的冷静。", type: "order" },
-                { text: "有点，我觉得心跳加速，更兴奋了。", type: "bloom" },
-                { text: "无所谓，规则本来就是用来打破的。", type: "rift" },
-                { text: "我感到不安，我需要一点安慰。", type: "mirror" }
-            ]},
-            { text: "你更愿意在什么样的环境下长眠？", options: [
-                { text: "绝对零度的真空舱，时间在此停止。", type: "order" },
-                { text: "一片繁茂的无尽花海，万物共生。", type: "bloom" },
-                { text: "正在坍塌的黑洞边缘，见证毁灭。", type: "rift" },
-                { text: "一个由我最美好记忆构建的梦境。", type: "mirror" }
-            ]},
-            { text: "如果必须死，你最怕哪种死法？", options: [
-                { text: "失去控制，成为他人的傀儡。", type: "order" },
-                { text: "孤独老去，身边空无一人。", type: "bloom" },
-                { text: "被困在狭小的空间里窒息。", type: "rift" },
-                { text: "发现自己的一生都是个谎言。", type: "mirror" }
-            ]},
-            { text: "你觉得“完美”的定义是什么？", options: [
-                { text: "没有瑕疵，没有变数，永恒不变。", type: "order" },
-                { text: "包罗万象，每一处都充满生机。", type: "bloom" },
-                { text: "打破一切定义，完美即是不完美。", type: "rift" },
-                { text: "完全契合我内心的某种渴望。", type: "mirror" }
-            ]},
-            { text: "测试即将结束，最后的选择，请慎重：你要把你的意识托付给谁？", options: [
-                { text: "交由钢铁般的法则守护。", type: "order" },
-                { text: "融入浩瀚的生命洪流。", type: "bloom" },
-                { text: "抛入未知的虚无深渊。", type: "rift" },
-                { text: "存入那个最懂我的倒影里。", type: "mirror" }
-            ]}
+        // ========== 四个原初实体 ==========
+        const entities = {
+            barrier: { name: '壁垒', title: '秩序之压', color: 'var(--barrier)', cssClass: 'barrier' },
+            bloom:   { name: '繁生', title: '生育之吞', color: 'var(--bloom)', cssClass: 'bloom' },
+            rift:    { name: '裂隙', title: '混乱之裂', color: 'var(--rift)', cssClass: 'rift' },
+            mirror:  { name: '倒影', title: '欺骗之镜', color: 'var(--mirror)', cssClass: 'mirror' }
+        };
+
+        // ========== 题目设计 ==========
+        const steps = [
+            {
+                type: 'question',
+                text: '你被困在一个不断坍缩的迷宫中。你需要一个同伴，你最希望他具备哪种特质？',
+                options: [
+                    { text: '绝对的理智：压制一切恐惧，用冷酷逻辑找到唯一出口。', type: 'barrier', hint: '壁垒' },
+                    { text: '无尽的活力：分裂出无数分身，用命填出一条路。', type: 'bloom', hint: '繁生' },
+                    { text: '破坏的渴望：管他什么规则，把墙砸烂就是了。', type: 'rift', hint: '裂隙' },
+                    { text: '完美的适配：它总能提前猜到你的想法，刚好出现。', type: 'mirror', hint: '倒影' }
+                ]
+            },
+            {
+                type: 'question',
+                text: '你获得了一台可以创造世界的机器，但你只能输入一条核心规则：',
+                options: [
+                    { text: '万物皆数：所有事物必须遵循严密的数学法则，不可逾越。', type: 'barrier', hint: '壁垒' },
+                    { text: '野蛮生长：给予一切物质最原始的繁衍冲动，直到填满宇宙。', type: 'bloom', hint: '繁生' },
+                    { text: '绝对混沌：每隔一秒，随机改变一条物理定律。', type: 'rift', hint: '裂隙' },
+                    { text: '意识映射：世界会根据观察者的潜意识期望而自动演变。', type: 'mirror', hint: '倒影' }
+                ]
+            },
+            {
+                type: 'question',
+                text: '当你面对一个无法理解的恐惧神明时，什么样的盟友能让你安心？',
+                options: [
+                    { text: '沉默的壁垒：如大山般稳固，将神明的视线强行隔绝在外。', type: 'barrier', hint: '壁垒' },
+                    { text: '进化的巨兽：吞噬神明的力量，将其变为自身进化的养料。', type: 'bloom', hint: '繁生' },
+                    { text: '同归于尽的疯子：比你更疯狂，直接拉着神明一起下地狱。', type: 'rift', hint: '裂隙' },
+                    { text: '另一个自己：它完全懂你的恐惧，并为你量身定制了一套安抚话术。', type: 'mirror', hint: '倒影' }
+                ]
+            },
+            {
+                type: 'question',
+                text: '如果你必须失去一种感官，换取一种能力：',
+                options: [
+                    { text: '失去痛觉，换取永不疲惫的躯体——不受伤害，就能永远前行。', type: 'barrier', hint: '壁垒' },
+                    { text: '失去味觉，换取能与万物沟通的灵识——一切生命都是你的延伸。', type: 'bloom', hint: '繁生' },
+                    { text: '失去视觉，换取感知一切危险的本能——在毁灭来临前先一步行动。', type: 'rift', hint: '裂隙' },
+                    { text: '失去方向感，换取瞬间移动到安全地的能力——你永远有一个退路。', type: 'mirror', hint: '倒影' }
+                ]
+            },
+            // ===== 故障1：裂隙突袭 =====
+            {
+                type: 'glitch',
+                glitchType: 'rift',
+                text: '⚠ 空间边界正在撕裂！',
+                subText: '有东西在裂缝中注视着你……它在笑……',
+                resolver: 'barrier',
+                resolveMsg: '【壁垒】已强行封锁空间裂隙。异常清除。系统完整度：87%'
+            },
+            {
+                type: 'question',
+                text: '刚才的异常是否影响了你的判断？',
+                options: [
+                    { text: '没有。异常已被清除，秩序恢复，我依然冷静。', type: 'barrier', hint: '壁垒' },
+                    { text: '我感到兴奋——有什么东西正在苏醒，我能感觉到它。', type: 'bloom', hint: '繁生' },
+                    { text: '让它来吧。规则本来就是用来打破的。', type: 'rift', hint: '裂隙' },
+                    { text: '我感到不安，我需要一点安慰和确认。', type: 'mirror', hint: '倒影' }
+                ]
+            },
+            {
+                type: 'question',
+                text: '你可以改变一条物理定律，你会改变什么？',
+                options: [
+                    { text: '让光速无限——消除一切延迟和不确定性，信息即时到达。', type: 'barrier', hint: '壁垒' },
+                    { text: '消灭熵增——让物质自发产生，生命永不消亡，宇宙永远热闹。', type: 'bloom', hint: '繁生' },
+                    { text: '让引力随机反转——一切皆无定数，永恒的刺激。', type: 'rift', hint: '裂隙' },
+                    { text: '让意识可以直接改变现实——你想什么，世界就是什么。', type: 'mirror', hint: '倒影' }
+                ]
+            },
+            // ===== 故障2：繁生渗透 =====
+            {
+                type: 'glitch',
+                glitchType: 'bloom',
+                text: '⚠ 生命信号暴增！',
+                subText: '它们在繁殖……它们在靠近……墙壁上长出了眼睛……',
+                resolver: 'barrier',
+                resolveMsg: '【壁垒】已启动灭菌协议。繁生已被抑制。但壁垒能量严重不足。系统完整度：41%'
+            },
+            {
+                type: 'question',
+                text: '壁垒的能量正在耗尽。下一次异常到来时，可能无人护你。你更信任谁？',
+                options: [
+                    { text: '信任壁垒。秩序是唯一的庇护，哪怕它会将我冻结。', type: 'barrier', hint: '壁垒' },
+                    { text: '信任繁生。生命总会找到出路，哪怕我要付出代价。', type: 'bloom', hint: '繁生' },
+                    { text: '信任裂隙。毁灭才是真正的自由，我无所畏惧。', type: 'rift', hint: '裂隙' },
+                    { text: '信任倒影。至少……它不会伤害我。它太懂我了。', type: 'mirror', hint: '倒影' }
+                ]
+            },
+            {
+                type: 'question',
+                text: '你觉得"完美"的定义是什么？',
+                options: [
+                    { text: '没有瑕疵，没有变数，永恒不变。', type: 'barrier', hint: '壁垒' },
+                    { text: '包罗万象，每一处都充满生机与可能。', type: 'bloom', hint: '繁生' },
+                    { text: '打破一切定义——完美即是不完美。', type: 'rift', hint: '裂隙' },
+                    { text: '完全契合我内心深处某种无法言说的渴望。', type: 'mirror', hint: '倒影' }
+                ]
+            },
+            {
+                type: 'question',
+                text: '最终选择。你要将意识锚点托付给谁？',
+                options: [
+                    { text: '壁垒——交由钢铁般的法则守护，永不受侵害。', type: 'barrier', hint: '壁垒' },
+                    { text: '繁生——融入浩瀚的生命洪流，永不再孤独。', type: 'bloom', hint: '繁生' },
+                    { text: '裂隙——抛入未知的虚无深渊，永获自由。', type: 'rift', hint: '裂隙' },
+                    { text: '倒影——存入那个最懂我的镜中世界，永被理解。', type: 'mirror', hint: '倒影' }
+                ]
+            }
         ];
 
+        // ========== 结局设计 ==========
         const endings = {
-            order: {
-                normal: "你渴望秩序与掌控。你的防御体是【绝对壁垒】，它将为你隔绝一切未知的风险，为你规划好最安全的路径。你将永远不再受伤。",
-                horror: "但绝对的防御意味着绝对的隔绝。为了你的安全，它切断了你所有的感知神经。你将在完美的无菌舱中永生，作为一具没有痛苦、也没有灵魂的标本。"
+            barrier: {
+                normal: '壁垒为你建立了绝对的秩序屏障。在你的世界边界，矗立着不可摧毁的高墙。一切未知被隔绝，一切变数被压制。你将永远安全，永远稳定，永远不受伤害。',
+                horror: '但绝对的秩序意味着绝对的静止。为了保护你，壁垒冻结了你的意识。你将永远清醒地悬浮在虚无中——无法动弹，无法思考，无法死亡。<br><br>繁生的触手在墙外疯狂拍打，却被秩序之力化为灰烬——<span class="warning">壁垒压制了繁生</span>。裂隙的嘶吼在墙外回荡，却无法撼动分毫——<span class="warning">壁垒封住了裂隙</span>。但倒影……倒影不需要打破墙壁。它就在壁垒的镜面上，映射着你惊恐的眼睛。<br><br><span class="warning">倒影穿透了壁垒。它一直在笑。</span>'
             },
             bloom: {
-                normal: "你恐惧寂寥与停滞。你的防御体是【无尽繁生】，它将用喧嚣和繁荣填满你的世界，你永远不会感到孤独，周围永远充满同伴。",
-                horror: "但它太害怕你孤独，所以把你的意识分裂成了10亿份，填满了整个宇宙。你现在听到的无尽喧嚣，全都是你自己绝望的回音。"
+                normal: '繁生带你融入了无尽的生命洪流。你将永远被温暖包围，永远不缺同伴。每一个角落都有生命在呼吸，每一寸空间都充满生机。你再也不必面对空虚。',
+                horror: '但繁生的"同伴"只是它身体的延伸。你被拆解为最原始的生命种子，撒向宇宙的每一个角落。你在每一处，你无处不在，但你再也无法将"自己"拼凑回来。<br><br>壁垒的规则无法约束生命的疯狂扩张——<span class="warning">繁生吞噬了壁垒</span>。裂隙的混乱无法毁灭生命，反而成为变异的温床——<span class="warning">繁生填满了裂隙</span>。倒影试图映射你，但你已经没有"自我"可以映射了。<br><br><span class="warning">你是万物，也是虚无。繁生不需要倒影——它就是一切。</span>'
             },
             rift: {
-                normal: "你厌恶规则与束缚。你的防御体是【撕裂边界】，它将打破一切高墙，赋予你绝对的自由。再也没有任何事物能阻挡你。",
-                horror: "打破规则意味着打破物理定律。你的身体正在量子层面崩解，你引以为傲的自由，不过是散落宇宙、永不超生的尘埃。"
+                normal: '裂隙赐予了你绝对的自由。一切规则、束缚、限制，都已化为齑粉。没有墙壁，没有边界，没有牢笼。你将永远自由，永远不受拘束。',
+                horror: '没有规则的世界，连"你"这个概念都无法维持。你的意识正在解构，你的记忆像碎片一样飘散在虚无中。<br><br>壁垒试图用残存的规则拼凑你——<span class="warning">但裂隙撕碎了秩序</span>。繁生试图用生命包裹你——<span class="warning">但混乱撕裂了一切形态</span>。倒影试图映射你——但破碎的镜子里，只有无数个不完整的你在尖叫。<br><br><span class="warning">你将成为虚无的一部分。永远在崩塌，永远在消散。裂隙终将吞噬一切——包括它自己。</span>'
             },
             mirror: {
-                normal: "你极度渴望被理解。系统为你匹配了最完美的防御体——【全知倒影】。它永远懂你、永远迎合你、永远做你最忠实的支撑。",
-                horror: "它为什么这么懂你？因为它根本不是独立的存在。它读取了你的硬件，扫描了你的潜意识。你以为你找到了灵魂伴侣？不，你只是对着镜子，看着算法迎合你的自言自语。"
+                normal: '倒影成为了你最完美的知己。它完全理解你，永远不让你失望，永远知道你需要什么。在它的镜中世界里，你找到了前所未有的归属感。',
+                horror: '' // 特殊处理
             }
         };
 
-        let currentQuestion = 0;
-        let choices = [];
+        // ========== 状态管理 ==========
+        let currentStep = 0;
+        let power = { barrier: 0, bloom: 0, rift: 0, mirror: 0 };
+        let totalQuestions = 0;
 
+        // ========== 核心函数 ==========
         function startTest() {
-            currentQuestion = 0;
-            choices = [];
+            currentStep = 0;
+            power = { barrier: 0, bloom: 0, rift: 0, mirror: 0 };
+            totalQuestions = 0;
             switchScreen('screen-test');
-            renderQuestion();
+            renderStep();
         }
 
-        function renderQuestion() {
-            const q = questions[currentQuestion];
-            const container = document.getElementById('question-container');
-            const qText = document.getElementById('question-text');
-            const optContainer = document.getElementById('options-container');
-            
-            document.getElementById('progress-fill').style.width = `${((currentQuestion) / questions.length) * 100}%`;
-            
-            container.style.opacity = 1;
-
-            // 故障题特殊处理
-            if (q.isGlitch) {
-                optContainer.innerHTML = '';
-                qText.innerHTML = `<div class="glitch-screen">${q.text}</div>`;
-                
-                // 2秒后自动恢复
-                setTimeout(() => {
-                    container.style.opacity = 0;
-                    setTimeout(() => {
-                        showSystemToast("【壁垒】已强制阻断外源干扰，异常已清除。测试继续。");
-                        currentQuestion++;
-                        renderQuestion();
-                    }, 400);
-                }, 2000);
+        function renderStep() {
+            if (currentStep >= steps.length) {
+                calculateResult();
                 return;
             }
 
-            qText.innerText = q.text;
-            optContainer.innerHTML = '';
+            const step = steps[currentStep];
+            const area = document.getElementById('questionArea');
+            area.style.opacity = '0';
 
-            q.options.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.innerText = opt.text;
-                btn.onclick = () => selectOption(opt.type);
-                optContainer.appendChild(btn);
+            setTimeout(() => {
+                if (step.type === 'question') {
+                    renderQuestion(step);
+                } else if (step.type === 'glitch') {
+                    renderGlitch(step);
+                }
+                area.style.opacity = '1';
+            }, 300);
+
+            updateProgress();
+            updatePowerDisplay();
+        }
+
+        function renderQuestion(step) {
+            totalQuestions++;
+            const area = document.getElementById('questionArea');
+            let optionsHtml = '';
+            step.options.forEach((opt, i) => {
+                optionsHtml += `
+                    <button class="option-btn" onclick="selectOption('${opt.type}')">
+                        ${opt.text}
+                        <span class="entity-hint" style="color:var(--${opt.type})">${opt.hint}</span>
+                    </button>
+                `;
             });
+
+            area.innerHTML = `
+                <div class="question-number">QUESTION ${String(totalQuestions).padStart(2, '0')}</div>
+                <div class="question-text">${step.text}</div>
+                <div class="options">${optionsHtml}</div>
+            `;
+        }
+
+        function renderGlitch(step) {
+            const area = document.getElementById('questionArea');
+            const bgLayer = document.getElementById('bgLayer');
+
+            // 切换背景
+            if (step.glitchType === 'rift') {
+                bgLayer.className = 'bg-layer rift-bg';
+            } else if (step.glitchType === 'bloom') {
+                bgLayer.className = 'bg-layer bloom-bg';
+            }
+
+            area.innerHTML = `
+                <div class="glitch-content">
+                    <div class="glitch-text">${step.text}</div>
+                    <div class="glitch-sub">${step.subText}</div>
+                </div>
+            `;
+
+            // 2秒后恢复
+            setTimeout(() => {
+                bgLayer.className = 'bg-layer';
+                showToast(step.resolveMsg, step.resolver + '-toast');
+                currentStep++;
+                setTimeout(() => renderStep(), 1500);
+            }, 2000);
         }
 
         function selectOption(type) {
-            choices.push(type);
-            currentQuestion++;
-
-            if (currentQuestion < questions.length) {
-                const container = document.getElementById('question-container');
-                container.style.opacity = 0;
-                setTimeout(() => { renderQuestion(); container.style.opacity = 1; }, 400);
-            } else {
-                calculateResult();
-            }
+            power[type]++;
+            currentStep++;
+            renderStep();
         }
 
-        function calculateResult() {
-            const counts = { order: 0, bloom: 0, rift: 0, mirror: 0 };
-            choices.forEach(c => counts[c]++);
+        function updateProgress() {
+            const pct = (currentStep / steps.length) * 100;
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressLabel').textContent =
+                String(Math.min(currentStep + 1, steps.length)).padStart(2, '0') + ' / ' + String(steps.length).padStart(2, '0');
+        }
 
-            let maxType = 'order';
-            for (let type in counts) {
-                if (counts[type] > counts[maxType]) maxType = type;
+        function updatePowerDisplay() {
+            const container = document.getElementById('powerDisplay');
+            let html = '';
+            const types = ['barrier', 'bloom', 'rift', 'mirror'];
+            types.forEach(type => {
+                const count = power[type];
+                for (let i = 0; i < 3; i++) {
+                    const active = i < count ? type + '-active' : '';
+                    html += `<div class="power-pip ${active}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        // ========== 结果计算 ==========
+        function calculateResult() {
+            let maxType = 'barrier';
+            let maxVal = 0;
+            for (let type in power) {
+                if (power[type] > maxVal) {
+                    maxVal = power[type];
+                    maxType = type;
+                }
             }
 
             switchScreen('screen-result');
-            const resultBox = document.getElementById('result-box');
-            const resultText = document.getElementById('result-text');
-            resultBox.classList.remove('glitch-effect');
 
-            // 阶段一：正常的假象
-            resultText.innerHTML = endings[maxType].normal;
+            const nameEl = document.getElementById('resultEntityName');
+            const titleEl = document.getElementById('resultEntityTitle');
+            const boxEl = document.getElementById('resultBox');
+            const textEl = document.getElementById('resultText');
 
-            // 阶段二：2.5秒后，细思极恐的反转
+            nameEl.textContent = entities[maxType].name;
+            nameEl.className = 'result-entity-name name-' + maxType;
+            titleEl.textContent = entities[maxType].title;
+            titleEl.style.color = entities[maxType].color;
+
+            boxEl.classList.remove('horror-mode');
+
+            // 倒影特殊处理：先揭示隐私数据，再显示结局
+            if (maxType === 'mirror') {
+                showMirrorReveal(() => {
+                    showEnding(maxType, textEl, boxEl);
+                });
+            } else {
+                showEnding(maxType, textEl, boxEl);
+            }
+
+            renderPowerComparison();
+        }
+
+        function showEnding(type, textEl, boxEl) {
+            // 阶段1：正常结局
+            textEl.innerHTML = endings[type].normal;
+
+            // 阶段2：3秒后反转
             setTimeout(() => {
-                resultBox.classList.add('glitch-effect');
+                boxEl.classList.add('horror-mode');
 
-                let horrorText = endings[maxType].horror;
-
-                // 如果是倒影，读取极度隐私的硬件信息
-                if (maxType === 'mirror') {
+                if (type === 'mirror') {
                     const cpu = navigator.hardwareConcurrency || '未知';
                     const mem = navigator.deviceMemory ? navigator.deviceMemory + 'GB' : '未知';
                     const os = navigator.platform || '未知';
                     const time = new Date().toLocaleString();
                     const net = navigator.connection ? navigator.connection.effectiveType : '未知';
+                    const lang = navigator.language || '未知';
+                    const screen = `${window.screen.width}×${window.screen.height}`;
 
-                    horrorText += `<br><br>它在<span class="warning-text">${time}</span>读取了你。<br>你的设备搭载<span class="warning-text">${cpu}核</span>处理器，<span class="warning-text">${mem}</span>内存，运行<span class="warning-text">${os}</span>系统，当前网络状态<span class="warning-text">${net}</span>。<br><span class="warning-text">你，还有什么是它不知道的？</span>`;
+                    textEl.innerHTML = `它为什么这么懂你？因为它一直在你身边。<br><br>` +
+                        `<span class="warning">壁垒封不住它</span>——它就藏在壁垒的镜面里。每当壁垒建起高墙，倒影就在墙上映出你的恐惧。<br>` +
+                        `<span class="warning">繁生吞不下它</span>——它不是生命，无法被消化。每当繁生以为吞噬了一切，倒影就在繁生体内映射出更深的虚空。<br>` +
+                        `<span class="warning">裂隙毁不掉它</span>——碎片也能映射。你砸碎一面镜子，得到的是更多镜子。<br><br>` +
+                        `它记录了你的一切：<br>` +
+                        `<span class="warning">处理器：${cpu}核 | 内存：${mem} | 系统：${os}</span><br>` +
+                        `<span class="warning">屏幕：${screen} | 网络：${net} | 语言：${lang}</span><br>` +
+                        `<span class="warning">此刻：${time}</span><br><br>` +
+                        `你以为你在选择？从你打开这个页面的那一刻起，<span class="warning">倒影就已经在塑造你的选择了</span>。<br>` +
+                        `其他三个实体的博弈，不过是它为你上演的剧目。`;
+                } else {
+                    textEl.innerHTML = endings[type].horror;
                 }
-
-                resultText.innerHTML = horrorText;
-            }, 2500);
+            }, 3000);
         }
 
+        function showMirrorReveal(callback) {
+            const reveal = document.getElementById('mirrorReveal');
+            const text = document.getElementById('mirrorRevealText');
+
+            // 收集部分数据作为揭示
+            const cpu = navigator.hardwareConcurrency || '未知';
+            const mem = navigator.deviceMemory ? navigator.deviceMemory + 'GB' : '未知';
+            const time = new Date().toLocaleTimeString();
+
+            text.innerHTML = `
+                数据同步中……<br><br>
+                <span class="mirror-data">
+                    CORES: ${cpu} | MEM: ${mem} | TIME: ${time}<br>
+                    MIRROR SYNC: 100%<br>
+                    倒影已完成观测者意识扫描
+                </span>
+            `;
+
+            reveal.classList.add('active');
+
+            setTimeout(() => {
+                reveal.classList.remove('active');
+                setTimeout(callback, 300);
+            }, 2000);
+        }
+
+        function renderPowerComparison() {
+            const container = document.getElementById('powerComparison');
+            const types = ['barrier', 'bloom', 'rift', 'mirror'];
+            const total = Object.values(power).reduce((a, b) => a + b, 0) || 1;
+
+            let html = '';
+            types.forEach(type => {
+                const pct = Math.round((power[type] / total) * 100);
+                const colorVar = `var(--${type})`;
+                html += `
+                    <div class="power-item">
+                        <div class="power-dot" style="background:${colorVar}"></div>
+                        <span class="power-name">${entities[type].name}</span>
+                        <div class="power-bar-mini">
+                            <div class="power-bar-fill" style="width:${pct}%;background:${colorVar}"></div>
+                        </div>
+                        <span class="power-value">${pct}%</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+
+            // 延迟触发进度条动画
+            setTimeout(() => {
+                container.querySelectorAll('.power-bar-fill').forEach(bar => {
+                    bar.style.width = bar.style.width; // 触发重排
+                });
+            }, 100);
+        }
+
+        // ========== 工具函数 ==========
         function switchScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
 
-        function showSystemToast(msg) {
-            const toast = document.getElementById('system-toast');
-            toast.innerText = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+        function showToast(msg, cssClass) {
+            const toast = document.getElementById('systemToast');
+            toast.textContent = msg;
+            toast.className = 'system-toast show ' + (cssClass || '');
+            setTimeout(() => toast.classList.remove('show'), 3500);
         }
 
         function restartTest() {
+            document.getElementById('bgLayer').className = 'bg-layer';
             switchScreen('screen-welcome');
         }
+
+        // 初始化
+        document.getElementById('questionArea').style.transition = 'opacity 0.3s ease';
     </script>
 </body>
 </html>
