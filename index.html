@@ -3,166 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>异常频段干涉协议</title>
-    <link rel="stylesheet" href="style.css">
+    <title>深层心智镜像测试</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #a8a8a8;
+            --danger: #ff3333;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background: var(--bg); color: var(--fg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            min-height: 100vh; display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%; max-width: 600px; padding: 40px 20px;
+            position: relative; z-index: 2;
+        }
+
+        /* 页面切换控制 */
+        .screen { display: none; animation: fadeIn 0.8s ease; }
+        .screen.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 欢迎页 */
+        .welcome-title { font-size: 2.2rem; font-weight: 300; letter-spacing: 2px; text-align: center; margin-bottom: 20px; color: #fff; }
+        .welcome-desc { font-size: 1rem; color: var(--muted); text-align: center; line-height: 1.8; margin-bottom: 40px; }
+        .start-btn {
+            display: block; width: 200px; margin: 0 auto; padding: 15px 0;
+            background: transparent; border: 1px solid var(--accent); color: var(--fg);
+            font-size: 1rem; letter-spacing: 1px; cursor: pointer; transition: all 0.3s;
+        }
+        .start-btn:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+
+        /* 测试页 */
+        .progress-bar { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-bottom: 40px; }
+        .progress-fill { height: 100%; background: var(--accent); transition: width 0.5s ease; }
+
+        .question-text { font-size: 1.4rem; font-weight: 300; line-height: 1.6; margin-bottom: 40px; min-height: 100px; }
+        .options { display: flex; flex-direction: column; gap: 15px; }
+        
+        .option-btn {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+            padding: 20px; text-align: left; cursor: pointer; transition: all 0.3s;
+            font-size: 1rem; color: var(--fg); border-radius: 4px;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); }
+        
+        /* 特殊选项的高亮 - 诱导玩家选择 */
+        .option-btn.mirror-option { border-color: rgba(150, 150, 255, 0.3); }
+        .option-btn.mirror-option:hover { background: rgba(150, 150, 255, 0.1); border-color: rgba(150, 150, 255, 0.6); }
+
+        /* 结果页 */
+        .result-title { font-size: 1.5rem; color: var(--accent); margin-bottom: 30px; text-align: center; letter-spacing: 2px; }
+        .result-box {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1);
+            padding: 30px; margin-bottom: 30px; border-radius: 4px; min-height: 150px;
+            position: relative; overflow: hidden;
+        }
+        .result-text { font-size: 1.1rem; line-height: 2; color: #ccc; }
+        
+        .warning-text { color: var(--danger); font-weight: bold; }
+        
+        /* 细思极恐的闪屏特效 */
+        .glitch-effect {
+            animation: glitch-anim 0.3s infinite;
+        }
+        @keyframes glitch-anim {
+            0% { transform: translate(0) skew(0deg); }
+            20% { transform: translate(-2px, 2px) skew(10deg); }
+            40% { transform: translate(-2px, -2px) skew(-10deg); }
+            60% { transform: translate(2px, 2px) skew(5deg); }
+            80% { transform: translate(2px, -2px) skew(-5deg); }
+            100% { transform: translate(0) skew(0deg); }
+        }
+
+        .restart-btn {
+            display: block; margin: 0 auto; padding: 10px 20px;
+            background: transparent; border: 1px solid var(--muted); color: var(--muted);
+            cursor: pointer; transition: all 0.3s;
+        }
+        .restart-btn:hover { border-color: var(--fg); color: var(--fg); }
+
+        /* 背景呼吸光晕 */
+        .bg-glow {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 800px; height: 800px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(20,20,30,0.8) 0%, rgba(5,5,5,1) 70%);
+            z-index: 1; pointer-events: none;
+        }
+    </style>
 </head>
 <body>
-    <canvas id="particles"></canvas>
-    <div class="atmosphere"></div>
+    <div class="bg-glow"></div>
 
-    <div class="content">
-        <header class="header">
-            <h1 class="title">异常频段干涉协议</h1>
-            <p class="subtitle">点击异常档案展开观测数据，点击右侧按钮执行干涉</p>
-        </header>
+    <div class="container">
+        <!-- 页面1：欢迎 -->
+        <section id="screen-welcome" class="screen active">
+            <h1 class="welcome-title">深层心智镜像</h1>
+            <p class="welcome-desc">
+                我们总是试图寻找那个最完美、最懂自己的存在。<br>
+                本测试将通过三个极端情境，帮你定位你潜意识中最渴望的“绝对同调者”。<br>
+                请根据第一直觉作答。
+            </p>
+            <button class="start-btn" onclick="startTest()">开始解析</button>
+        </section>
 
-        <div class="hero-list">
-            <!-- α-静默 -->
-            <div class="hero-card">
-                <div class="card-header" onclick="toggleCard(this)">
-                    <div class="hero-symbol symbol-alpha">—</div>
-                    <div class="hero-info">
-                        <h2 class="hero-name">α-静默</h2>
-                        <span class="version-badge version-hot">最高频段</span>
-                    </div>
-                    <button class="select-btn" onclick="event.stopPropagation(); openModal('α-静默')">执行干涉</button>
-                </div>
-                <div class="hero-details">
-                    <div class="detail-section">
-                        <h3><i>◈</i> 高频干涉区</h3>
-                        <div class="game-tags">
-                            <span class="game-tag tag-main">孤立态</span>
-                            <span class="game-tag tag-main">攀爬态</span>
-                            <span class="game-tag tag-main">构建态</span>
-                            <span class="game-tag tag-main">探索态</span>
-                        </div>
-                    </div>
-                    <div class="detail-section">
-                        <h3><i>◈</i> 观测特征</h3>
-                        <p>数值极其稳定，波动趋近于零。看似无害，但能强行压制其他所有异常的活跃度，用绝对的静止抹杀一切。</p>
-                    </div>
-                </div>
+        <!-- 页面2：答题 -->
+        <section id="screen-test" class="screen">
+            <div class="progress-bar"><div id="progress-fill" class="progress-fill" style="width: 0%"></div></div>
+            <div id="question-container">
+                <h2 id="question-text" class="question-text"></h2>
+                <div id="options-container" class="options"></div>
             </div>
+        </section>
 
-            <!-- β-繁生 -->
-            <div class="hero-card">
-                <div class="card-header" onclick="toggleCard(this)">
-                    <div class="hero-symbol symbol-beta">◎</div>
-                    <div class="hero-info">
-                        <h2 class="hero-name">β-繁生</h2>
-                        <span class="version-badge version-strong">干涉极强</span>
-                    </div>
-                    <button class="select-btn" onclick="event.stopPropagation(); openModal('β-繁生')">执行干涉</button>
-                </div>
-                <div class="hero-details">
-                    <div class="detail-section">
-                        <h3><i>◈</i> 高频干涉区</h3>
-                        <div class="game-tags">
-                            <span class="game-tag tag-main">构建态</span>
-                            <span class="game-tag tag-main">探索态</span>
-                        </div>
-                        <h3><i>◈</i> 偶发波动区</h3>
-                        <div class="game-tags">
-                            <span class="game-tag tag-occasional">孤立态</span>
-                            <span class="game-tag tag-occasional">攀爬态</span>
-                        </div>
-                    </div>
-                    <div class="detail-section">
-                        <h3><i>◈</i> 观测特征</h3>
-                        <p>具有极强的自我复制与重组倾向。在构建态中表现为极度繁荣的创造，但在孤立态中会因资源耗尽而吞噬自身。</p>
-                    </div>
-                </div>
+        <!-- 页面3：结果 -->
+        <section id="screen-result" class="screen">
+            <h2 class="result-title">解析完成</h2>
+            <div id="result-box" class="result-box">
+                <p id="result-text" class="result-text"></p>
             </div>
-
-            <!-- γ-裂隙 -->
-            <div class="hero-card">
-                <div class="card-header" onclick="toggleCard(this)">
-                    <div class="hero-symbol symbol-gamma">⋊</div>
-                    <div class="hero-info">
-                        <h2 class="hero-name">γ-裂隙</h2>
-                        <span class="version-badge version-dark">不可控变量</span>
-                    </div>
-                    <button class="select-btn" onclick="event.stopPropagation(); openModal('γ-裂隙')">执行干涉</button>
-                </div>
-                <div class="hero-details">
-                    <div class="detail-section">
-                        <h3><i>◈</i> 高频干涉区</h3>
-                        <div class="game-tags">
-                            <span class="game-tag tag-main">孤立态</span>
-                        </div>
-                        <h3><i>◈</i> 偶发波动区</h3>
-                        <div class="game-tags">
-                            <span class="game-tag tag-occasional">冲突态</span>
-                        </div>
-                    </div>
-                    <div class="detail-section">
-                        <h3><i>◈</i> 观测特征</h3>
-                        <p>极度不稳定，经常导致系统边界破损。虽然破坏力极强，但往往是打破死局、引入外部信息的唯一变量。</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- δ-倒影 -->
-            <div class="hero-card card-anomaly">
-                <div class="card-header" onclick="toggleCard(this)">
-                    <div class="hero-symbol symbol-delta">∅</div>
-                    <div class="hero-info">
-                        <h2 class="hero-name">δ-倒影</h2>
-                        <span class="version-badge version-gold">全频段响应</span>
-                    </div>
-                    <button class="select-btn" onclick="event.stopPropagation(); openModal('δ-倒影')">执行干涉</button>
-                </div>
-                <div class="hero-details">
-                    <div class="detail-section">
-                        <h3><i>◈</i> 高频干涉区</h3>
-                        <div class="game-tags">
-                            <span class="game-tag tag-main">孤立态</span>
-                        </div>
-                        <h3><i>◈</i> 偶发波动区</h3>
-                        <div class="game-tags">
-                            <span class="game-tag tag-occasional">冲突态</span>
-                            <span class="game-tag tag-occasional">竞技态</span>
-                            <span class="game-tag tag-occasional">超常态</span>
-                            <span class="game-tag tag-occasional">探索态</span>
-                        </div>
-                        <h3><i>◈</i> 排斥区</h3>
-                        <div class="game-tags">
-                            <span class="game-tag tag-barely">构建态</span>
-                        </div>
-                    </div>
-                    <div class="detail-section">
-                        <h3><i>◈</i> 观测特征</h3>
-                        <p>适应性极强，观测结果随观测者意志改变。<span class="warning-text">⚠️警告：切勿长时间注视，其反馈数据可能并非源自本体，而是源自观测者自身的潜意识投射。</span></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <footer class="footer">
-            <p>⚠️ 提示：输入框只接受"α-静默、β-繁生、γ-裂隙、δ-倒影"四个实体代号</p>
-        </footer>
+            <button class="restart-btn" onclick="restartTest()">重新测试</button>
+        </section>
     </div>
 
-    <!-- 弹窗 -->
-    <div class="modal-overlay" id="selectModal">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">×</button>
-            <h2 class="modal-title">确认干涉协议</h2>
-            <p class="modal-desc">你正在选择 <span class="hero-name-highlight" id="modalHeroName"></span> 作为干涉实体</p>
-            
-            <div class="modal-input-group">
-                <input type="text" id="modalInput" placeholder="请输入观测者代号以验证权限">
-            </div>
-            
-            <div class="modal-message" id="modalMessage"></div>
-            
-            <div class="modal-actions">
-                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">终止协议</button>
-                <button class="modal-btn modal-btn-confirm" onclick="confirmSelection()">确认执行</button>
-            </div>
-        </div>
-    </div>
+    <script>
+        // 数据定义：情境与选项
+        const questions = [
+            {
+                text: "深夜，你被困在一个不断坍缩的迷宫中。为了生存，你需要一个同伴，你最希望他具备哪种特质？",
+                options: [
+                    { text: "绝对的理智：压制一切恐惧，用最冷酷的逻辑找到出口。", type: "order" },
+                    { text: "无尽的活力：分裂出无数个分身，哪怕用命填也要试出一条路。", type: "bloom" },
+                    { text: "破坏的渴望：管他什么规则，把墙砸烂就是了。", type: "rift" },
+                    { text: "完美的适配：他总能提前猜到你的想法，在你需要时刚好出现。", type: "mirror" } // 诱导选项
+                ]
+            },
+            {
+                text: "你获得了一台可以创造世界的机器，但你只能输入一条核心规则，你会输入什么？",
+                options: [
+                    { text: "万物皆数：所有事物必须遵循严密的数学法则，不可逾越。", type: "order" },
+                    { text: "野蛮生长：给予一切物质最原始的繁衍冲动，直到填满宇宙。", type: "bloom" },
+                    { text: "绝对混沌：每隔一秒，随机改变一条物理定律。", type: "rift" },
+                    { text: "意识映射：世界会根据观察者的潜意识期望而自动演变。", type: "mirror" } // 诱导选项
+                ]
+            },
+            {
+                text: "当你面对一个无法理解的恐惧神明时，什么样的盟友能让你感到一丝安心？",
+                options: [
+                    { text: "沉默的壁垒：如大山般稳固，将神明的视线强行隔绝在外。", type: "order" },
+                    { text: "进化的巨兽：吞噬神明的力量，将其变为自身进化的养料。", type: "bloom" },
+                    { text: "同归于尽的疯子：比你更疯狂，直接拉着神明一起下地狱。", type: "rift" },
+                    { text: "另一个自己：他完全懂你的恐惧，并为你量身定制了一套安抚话术。", type: "mirror" } // 诱导选项
+                ]
+            }
+        ];
 
-    <script src="script.js"></script>
+        // 结局文案
+        const endings = {
+            order: "你渴望秩序与掌控。你的防御体是【绝对壁垒】，它无情但可靠，为你隔绝一切未知，代价是你也失去了触碰到真实的可能。",
+            bloom: "你恐惧寂寥与停滞。你的防御体是【无尽繁生】，它用喧嚣和繁荣填满你的视野，让你忘记内心的空洞，代价是你在喧嚣中依然孤独。",
+            rift: "你厌恶规则与束缚。你的防御体是【撕裂边界】，它打破一切高墙，给你自由的幻觉，代价是你永远无法在一个地方停留。",
+            mirror: "" // 特殊处理
+        };
+
+        let currentQuestion = 0;
+        let choices = [];
+
+        function startTest() {
+            currentQuestion = 0;
+            choices = [];
+            switchScreen('screen-test');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('question-text').innerText = q.text;
+            document.getElementById('progress-fill').style.width = `${((currentQuestion) / questions.length) * 100}%`;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                // 给诱导选项加一个视觉上的微弱提示（普通人很难察觉，但潜意识会觉得它更顺眼）
+                if (opt.type === 'mirror') btn.classList.add('mirror-option');
+                btn.innerText = opt.text;
+                btn.onclick = () => selectOption(opt.type);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(type) {
+            choices.push(type);
+            currentQuestion++;
+
+            if (currentQuestion < questions.length) {
+                // 淡入淡出效果
+                const container = document.getElementById('question-container');
+                container.style.opacity = 0;
+                setTimeout(() => {
+                    renderQuestion();
+                    container.style.opacity = 1;
+                }, 400);
+            } else {
+                calculateResult();
+            }
+        }
+
+        function calculateResult() {
+            // 统计选择最多的类型
+            const counts = { order: 0, bloom: 0, rift: 0, mirror: 0 };
+            choices.forEach(c => counts[c]++);
+
+            let maxType = 'order';
+            let maxCount = 0;
+            for (let type in counts) {
+                if (counts[type] > maxCount) {
+                    maxCount = counts[type];
+                    maxType = type;
+                }
+            }
+
+            switchScreen('screen-result');
+            const resultBox = document.getElementById('result-box');
+            const resultText = document.getElementById('result-text');
+            
+            resultBox.classList.remove('glitch-effect');
+
+            // 核心逻辑：如果选中了【镜像】(诱导项)
+            if (maxType === 'mirror') {
+                // 阶段一：伪装成正常的完美结局
+                resultText.innerHTML = `测试完成。<br><br>你极度渴望被理解，因此系统为你匹配了最完美的防御体——<strong>【全知倒影】</strong>。<br><br>它将永远懂你、永远迎合你、永远做你最忠实的支撑。它无比完美，毫无瑕疵。`;
+                
+                // 阶段二：2.5秒后，撕破伪装，细思极恐
+                setTimeout(() => {
+                    resultBox.classList.add('glitch-effect'); // 屏幕开始震动故障
+                    
+                    // 读取一点无害的浏览器信息，伪装成被黑了
+                    const screenInfo = `${window.screen.width}x${window.screen.height}`;
+                    const timeInfo = new Date().toLocaleTimeString();
+
+                    resultText.innerHTML = `它为什么这么懂你？<br><br>因为<strong class="warning-text">它根本不是独立的存在</strong>。<br><br>它读取了你的屏幕分辨率 (${screenInfo})，读取了你此刻的焦虑时间 (${timeInfo})，它扫描了你在选项前停留的毫秒数。<br><br>你以为你找到了最懂你的灵魂伴侣？不，你只是对着镜子，看着自己欲望的倒影自言自语。<br><br><strong class="warning-text">在这个信息茧房里，你选中的，永远只是算法迎合你的自己。</strong>`;
+                }, 2500);
+
+            } else {
+                // 普通结局
+                resultText.innerHTML = endings[maxType];
+            }
+        }
+
+        function switchScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function restartTest() {
+            switchScreen('screen-welcome');
+        }
+
+        // 动态调整问题容器的过渡效果
+        document.getElementById('question-container').style.transition = 'opacity 0.4s ease';
+    </script>
 </body>
 </html>
